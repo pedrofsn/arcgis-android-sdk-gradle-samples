@@ -13,10 +13,6 @@
 
 package com.esri.arcgis.android.sample.runtimegeodb;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
@@ -38,75 +34,39 @@ import com.esri.core.tasks.geodatabase.GeodatabaseStatusCallback;
 import com.esri.core.tasks.geodatabase.GeodatabaseStatusInfo;
 import com.esri.core.tasks.geodatabase.GeodatabaseSyncTask;
 
-public class CreateRuntimeGeodatabaseActivity extends Activity {
+import java.io.File;
+import java.io.FileNotFoundException;
 
-	static MapView mMapView;
-	String fLayerUrl;
-	String fServiceUrl;
+public class CreateRuntimeGeodatabaseActivity extends AppCompatActivity {
+
+    protected static final String TAG = "CRGdb";
+    protected static String OFFLINE_FILE_EXTENSION = ".geodatabase";
+    static MapView mMapView;
 	static ArcGISFeatureLayer wildfireFL;
 	static GeodatabaseSyncTask gdbSyncTask;
 
 	static ProgressDialog mProgressDialog;
 	static TextView pathView;
-
-	private static File demoDataFile;
+    static String localGdbFilePath;
+    private static File demoDataFile;
 	private static String offlineDataSDCardDirName;
 	private static String filename;
-	static String localGdbFilePath;
-	
-	protected static final String TAG = "CRGdb";
-	protected static String OFFLINE_FILE_EXTENSION = ".geodatabase";
-	
 	private static Context mContext;
+    String fLayerUrl;
+    String fServiceUrl;
 
-	/** Called when the activity is first created. */
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
-		// set app context so it can be obtained to update progress
-		CreateRuntimeGeodatabaseActivity.setContext(this);
-
-		// get sdcard resource names
-		demoDataFile = Environment.getExternalStorageDirectory();
-		offlineDataSDCardDirName = this.getResources().getString(
-				R.string.config_data_sdcard_offline_dir);
-		filename = this.getResources().getString(
-				R.string.config_geodatabase_name);
-
-		// Retrieve the map and map options from XML layout
-		mMapView = (MapView) findViewById(R.id.map);
-		// create service layer
-		fServiceUrl = this.getResources()
-				.getString(R.string.featureservice_url);
-		
-		mProgressDialog = new ProgressDialog(CreateRuntimeGeodatabaseActivity.this);
-		mProgressDialog.setTitle("Create local runtime geodatabase");
-		
-		// attribute app and pan across dateline
-		addAttributes();
-	}
-
-	private void addAttributes() {
-		// attribute ESRI logo to map
-		mMapView.setEsriLogoVisible(true);
-		// enable map to wrap around date line
-		mMapView.enableWrapAround(true);
-
-	}
-	
 	// methods to ensure context is available when updating the progress dialog
 	public static Context getContext(){
 		return mContext;
 	}
-	
+
 	public static void setContext(Context context){
 		mContext = context;
 	}
 
-	/*
-	 * Create the geodatabase file location and name structure
-	 */
+    /*
+     * Create the geodatabase file location and name structure
+     */
 	static String createGeodatabaseFilePath() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(demoDataFile.getAbsolutePath());
@@ -118,55 +78,7 @@ public class CreateRuntimeGeodatabaseActivity extends Activity {
 		return sb.toString();
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// inflate action bar menu
-		getMenuInflater().inflate(R.menu.menu, menu);
-		return super.onCreateOptionsMenu(menu);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// handle menu item selection
-		switch (item.getItemId()) {
-		case R.id.action_download:
-			downloadData(fServiceUrl);
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
-		}
-
-	}
-
-	/**
-	 * Create the GeodatabaseTask from the feature service URL w/o credentials.
-	 */
-	private void downloadData(String url) {
-		Log.i(TAG, "Create GeoDatabase");
-		// create a dialog to update user on progress
-		mProgressDialog.show();
-		// create the GeodatabaseTask
-
-		gdbSyncTask = new GeodatabaseSyncTask(url, null);
-		gdbSyncTask
-				.fetchFeatureServiceInfo(new CallbackListener<FeatureServiceInfo>() {
-
-					@Override
-					public void onError(Throwable arg0) {
-						Log.e(TAG, "Error fetching FeatureServiceInfo");
-					}
-
-					@Override
-					public void onCallback(FeatureServiceInfo fsInfo) {
-						if (fsInfo.isSyncEnabled()) {
-							createGeodatabase(fsInfo);
-						}
-					}
-				});
-
-	}
-
-	/**
+    /**
 	 * Set up parameters to pass the the {@link #submitTask()} method. A
 	 * {@link CallbackListener} is used for the response.
 	 */
@@ -232,8 +144,8 @@ public class CreateRuntimeGeodatabaseActivity extends Activity {
 
 	/**
 	 * Add feature layer from local geodatabase to map
-	 * 
-	 * @param featureLayerPath
+     *
+     * @param featureLayerPath
 	 */
 	private static void updateFeatureLayer(String featureLayerPath) {
 		// create a new geodatabase
@@ -257,16 +169,102 @@ public class CreateRuntimeGeodatabaseActivity extends Activity {
 			}
 		}
 	}
-	
-	private static void showProgressBar(final CreateRuntimeGeodatabaseActivity activity, final String message){
+
+    private static void showProgressBar(final CreateRuntimeGeodatabaseActivity activity, final String message){
 		activity.runOnUiThread(new Runnable(){
 
 			@Override
 			public void run() {
 				mProgressDialog.setMessage(message);
 			}
-			
-		});
+
+        });
+    }
+
+    /**
+     * Called when the activity is first created.
+     */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+        // set app context so it can be obtained to update progress
+        CreateRuntimeGeodatabaseActivity.setContext(this);
+
+        // get sdcard resource names
+        demoDataFile = Environment.getExternalStorageDirectory();
+        offlineDataSDCardDirName = this.getResources().getString(
+                R.string.config_data_sdcard_offline_dir);
+        filename = this.getResources().getString(
+                R.string.config_geodatabase_name);
+
+        // Retrieve the map and map options from XML layout
+        mMapView = (MapView) findViewById(R.id.map);
+        // create service layer
+        fServiceUrl = this.getResources()
+                .getString(R.string.featureservice_url);
+
+        mProgressDialog = new ProgressDialog(CreateRuntimeGeodatabaseActivity.this);
+        mProgressDialog.setTitle("Create local runtime geodatabase");
+
+        // attribute app and pan across dateline
+        addAttributes();
+    }
+
+    private void addAttributes() {
+        // attribute ESRI logo to map
+        mMapView.setEsriLogoVisible(true);
+        // enable map to wrap around date line
+        mMapView.enableWrapAround(true);
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // inflate action bar menu
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // handle menu item selection
+        switch (item.getItemId()) {
+            case R.id.action_download:
+                downloadData(fServiceUrl);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
+    }
+
+    /**
+     * Create the GeodatabaseTask from the feature service URL w/o credentials.
+     */
+    private void downloadData(String url) {
+        Log.i(TAG, "Create GeoDatabase");
+        // create a dialog to update user on progress
+        mProgressDialog.show();
+        // create the GeodatabaseTask
+
+        gdbSyncTask = new GeodatabaseSyncTask(url, null);
+        gdbSyncTask
+                .fetchFeatureServiceInfo(new CallbackListener<FeatureServiceInfo>() {
+
+                    @Override
+                    public void onError(Throwable arg0) {
+                        Log.e(TAG, "Error fetching FeatureServiceInfo");
+                    }
+
+                    @Override
+                    public void onCallback(FeatureServiceInfo fsInfo) {
+                        if (fsInfo.isSyncEnabled()) {
+                            createGeodatabase(fsInfo);
+                        }
+                    }
+                });
+
 	}
 
 	@Override

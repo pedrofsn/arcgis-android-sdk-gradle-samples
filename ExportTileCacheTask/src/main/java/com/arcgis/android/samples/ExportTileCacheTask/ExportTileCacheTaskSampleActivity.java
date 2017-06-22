@@ -13,9 +13,6 @@
 
 package com.arcgis.android.samples.ExportTileCacheTask;
 
-import java.util.ArrayList;
-
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -37,43 +34,36 @@ import com.esri.core.tasks.tilecache.ExportTileCacheParameters.ExportBy;
 import com.esri.core.tasks.tilecache.ExportTileCacheStatus;
 import com.esri.core.tasks.tilecache.ExportTileCacheTask;
 
-public class ExportTileCacheTaskSampleActivity extends Activity {
+import java.util.ArrayList;
 
-	static final String TAG = "ExportTileCacheTaskSampleActivity";
+public class ExportTileCacheTaskSampleActivity extends AppCompatActivity {
 
-	// Map elements
+    static final String TAG = "ExportTileCacheTaskSampleActivity";
+    // path to persist data to disk
+    static String DEFAULT_BASEMAP_PATH;
+    private static String defaultPath = null;
+    final CharSequence[] items = {"Level ID:0", "Level ID:1", "Level ID:2",
+            "Level ID:3", "Level ID:4", "Level ID:5", "Level ID:6",
+            "Level ID:7", "Level ID:8", "Level ID:9",};
+    // Map elements
 	MapView mMapView;
 	ArcGISLocalTiledLayer localTiledLayer;
-
 	// action bar menu items
 	MenuItem selectLevels;
 	MenuItem download;
 	MenuItem switchMaps;
-
 	boolean isLocalLayerVisible = false;
-
 	// The generated tile cache will be a compact cache
 	boolean createAsTilePackage = false;
-
 	double[] levels;
-
-	final CharSequence[] items = { "Level ID:0", "Level ID:1", "Level ID:2",
-			"Level ID:3", "Level ID:4", "Level ID:5", "Level ID:6",
-			"Level ID:7", "Level ID:8", "Level ID:9", };
-
 	double[] mapResolution = { 156543.03392800014, 78271.51696399994,
 			39135.75848200009, 19567.87924099992, 9783.93962049996,
 			4891.96981024998, 2445.98490512499, 1222.992452562495,
 			611.4962262813797, 305.74811314055756 };
-
 	boolean[] itemsChecked = new boolean[items.length];
 	ArrayList<Double> levelsArraylist = new ArrayList<Double>();
-	// path to persist data to disk
-	static String DEFAULT_BASEMAP_PATH;
 	// tile package url
 	String tileURL;
-
-	private static String defaultPath = null;
 
 	/** Called when the activity is first created. */
 	@Override

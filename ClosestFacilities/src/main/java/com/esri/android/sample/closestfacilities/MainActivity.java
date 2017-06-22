@@ -13,7 +13,6 @@
 
 package com.esri.android.sample.closestfacilities;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -42,9 +41,14 @@ import com.esri.core.tasks.na.NAFeaturesAsFeature;
 import com.esri.core.tasks.na.NATravelDirection;
 import com.esri.core.tasks.na.Route;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
-	// mapview definition
+    // create UI components
+    static ProgressDialog dialog;
+    // create user/pass to use commercial service
+    static String user = "";
+    static String pass = "";
+    // mapview definition
 	MapView mMapView;
 	// basemap layer
 	ArcGISTiledMapServiceLayer basemapStreet;
@@ -56,11 +60,7 @@ public class MainActivity extends Activity {
 	Route route;
 	// graphics layer to show route
 	GraphicsLayer routeLayer;
-
-	// create UI components
-	static ProgressDialog dialog;
 	boolean auth;
-
 	// string urls
 	// feature service query url for facilities
 	String queryUrl = "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Recreation/FeatureServer/0/query?where=Facility%3E2&geometry=xmin%3A+-116.6%2C+ymin%3A+32.6%2C+xmax%3A+-117.36%2C+ymax%3A+32.9&geometryType=esriGeometryEnvelope&inSR=4236&spatialRel=esriSpatialRelIntersects&returnGeometry=true&outSR=102100&returnDistinctValues=false&returnIdsOnly=false&returnCountOnly=false&returnZ=false&returnM=false&f=pjson";
@@ -139,6 +139,25 @@ public class MainActivity extends Activity {
 		// execute task
 		find.execute(cfp);
 	}
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mMapView.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mMapView.unpause();
+    }
 
 	private class FindClosestFacilities extends
 			AsyncTask<ClosestFacilityParameters, Void, ClosestFacilityResult> {
@@ -234,28 +253,5 @@ public class MainActivity extends Activity {
 		}
 
 	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mMapView.pause();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mMapView.unpause();
-	}
-
-	// create user/pass to use commercial service
-	static String user = "";
-	static String pass = "";
 
 }

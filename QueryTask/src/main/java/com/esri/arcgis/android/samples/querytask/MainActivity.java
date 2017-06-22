@@ -13,7 +13,6 @@
 
 package com.esri.arcgis.android.samples.querytask;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -26,7 +25,6 @@ import android.widget.Toast;
 import com.esri.android.map.GraphicsLayer;
 import com.esri.android.map.MapView;
 import com.esri.android.map.event.OnStatusChangedListener;
-import com.esri.core.geometry.Envelope;
 import com.esri.core.geometry.SpatialReference;
 import com.esri.core.map.Feature;
 import com.esri.core.map.FeatureResult;
@@ -36,18 +34,17 @@ import com.esri.core.symbol.SimpleFillSymbol;
 import com.esri.core.tasks.query.QueryParameters;
 import com.esri.core.tasks.query.QueryTask;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
-	MapView mMapView;
+    final static int HAS_RESULTS = 1;
+    final static int NO_RESULT = 2;
+    final static int CLEAR_RESULT = 3;
+    MapView mMapView;
 	GraphicsLayer graphicsLayer;
 	Graphic fillGraphic;
 	String queryLayer;
 	boolean boolQuery = true;
 	ProgressDialog progress;
-
-	final static int HAS_RESULTS = 1;
-	final static int NO_RESULT = 2;
-	final static int CLEAR_RESULT = 3;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -102,11 +99,23 @@ public class MainActivity extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mMapView.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mMapView.unpause();
+    }
+
 	/**
-	 * 
-	 * Query Task executes asynchronously.
-	 * 
-	 */
+     *
+     * Query Task executes asynchronously.
+     *
+     */
 	private class AsyncQueryTask extends AsyncTask<String, Void, FeatureResult> {
 
 		@Override
@@ -180,18 +189,6 @@ public class MainActivity extends Activity {
 
 		}
 
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mMapView.pause();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mMapView.unpause();
 	}
 
 }

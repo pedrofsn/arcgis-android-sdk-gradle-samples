@@ -13,7 +13,6 @@
 
 package com.arcgis.android.samples.search.placesearch;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -43,21 +42,18 @@ import com.esri.core.tasks.geocode.LocatorGeocodeResult;
 import java.util.List;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-
+    // UI components
+    static ProgressDialog mProgressDialog;
     MapView mMapView;
     EditText mSearchEditText;
     String mMapViewState;
-
     // Graphics layer to show geocode and reverse geocode results
     GraphicsLayer mLocationLayer;
     Point mLocationLayerPoint;
     String mLocationLayerPointString;
-
-    // UI components
-    static ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -186,6 +182,32 @@ public class MainActivity extends Activity {
         mLocationLayerPointString = address;
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        mMapViewState = mMapView.retainState();
+        mMapView.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Start the MapView running again
+        if (mMapView != null) {
+            mMapView.unpause();
+            if (mMapViewState != null) {
+                mMapView.restoreState(mMapViewState);
+            }
+        }
+    }
+
     /*
  * This class provides an AsyncTask that performs a geolocation request on a
  * background thread and displays the first result on the map on the UI
@@ -265,33 +287,6 @@ public class MainActivity extends Activity {
             }
         }
 
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        mMapViewState = mMapView.retainState();
-        mMapView.pause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        // Start the MapView running again
-        if (mMapView != null) {
-            mMapView.unpause();
-            if (mMapViewState != null) {
-                mMapView.restoreState(mMapViewState);
-            }
-        }
     }
 
 }

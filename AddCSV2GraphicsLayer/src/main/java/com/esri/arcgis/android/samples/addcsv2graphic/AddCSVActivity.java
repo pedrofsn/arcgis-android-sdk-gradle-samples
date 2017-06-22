@@ -13,17 +13,6 @@
 
 package com.esri.arcgis.android.samples.addcsv2graphic;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -31,6 +20,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -47,19 +37,61 @@ import com.esri.core.geometry.Point;
 import com.esri.core.map.Graphic;
 import com.esri.core.symbol.SimpleMarkerSymbol;
 
-public class AddCSVActivity extends Activity {
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
+public class AddCSVActivity extends AppCompatActivity {
+
+    static final int DATE_DIALOG_ID = 0;
   // ArcGIS Android elements
   MapView mMapView = null;
   ArcGISTiledMapServiceLayer basemapTileLayer;
   GraphicsLayer graphicsLayer = null;
-
-  static final int DATE_DIALOG_ID = 0;
   int mYear = 2011;
   int mMonth = 11;
   int mDay = 1;
 
   ProgressDialog dialog;
+    private DatePickerDialog.OnDateSetListener mDateSetListener = new DatePickerDialog.OnDateSetListener() {
+        @Override
+        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+            mYear = year;
+            mMonth = monthOfYear;
+            mDay = dayOfMonth;
+
+            String sday;
+            String smonth;
+            String syear;
+
+            if (mDay < 10) {
+                sday = "0" + mDay;
+            } else {
+                sday = "" + mDay;
+            }
+
+            mMonth++;
+            if (mMonth < 10) {
+                smonth = "0" + mMonth;
+            } else {
+                smonth = "" + mMonth;
+            }
+
+            syear = mYear - 2000 + "";
+
+            String date = syear + smonth + sday;
+
+            FetchEvents aef = new FetchEvents();
+            aef.execute(date);
+
+        }
+    };
 
   /** Called when the activity is first created. */
   @Override
@@ -106,40 +138,6 @@ public class AddCSVActivity extends Activity {
     }
     return null;
   }
-
-  private DatePickerDialog.OnDateSetListener mDateSetListener = new DatePickerDialog.OnDateSetListener() {
-    @Override
-    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-      mYear = year;
-      mMonth = monthOfYear;
-      mDay = dayOfMonth;
-
-      String sday;
-      String smonth;
-      String syear;
-
-      if (mDay < 10) {
-        sday = "0" + mDay;
-      } else {
-        sday = "" + mDay;
-      }
-
-      mMonth++;
-      if (mMonth < 10) {
-        smonth = "0" + mMonth;
-      } else {
-        smonth = "" + mMonth;
-      }
-
-      syear = mYear - 2000 + "";
-
-      String date = syear + smonth + sday;
-
-      FetchEvents aef = new FetchEvents();
-      aef.execute(date);
-
-    }
-  };
 
   void getCSVReport(String date) {
     /*
@@ -342,9 +340,9 @@ public class AddCSVActivity extends Activity {
 
   private class MyOnSingleTapListener implements OnSingleTapListener {
 
+      private static final long serialVersionUID = 1L;
     // Here, we use a single tap to popup the attributes for a report...
     Context _ctx;
-    private static final long serialVersionUID = 1L;
 
     public MyOnSingleTapListener(Context ctx) {
       _ctx = ctx;

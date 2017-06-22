@@ -14,7 +14,6 @@
 package com.arcgis.android.samples.maps.switchmaps;
 
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.Menu;
@@ -28,7 +27,7 @@ import com.esri.android.map.MapView;
  * different map contents. The current extent of the MapView is preserved when switching between fragments, by
  * making use of the retainState and restoreState methods on the MapView.
  */
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     // service url string
     String topoUrl;

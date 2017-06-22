@@ -13,11 +13,7 @@
 
 package com.arcgis.android.samples.dynamiclayer;
 
-import java.util.List;
-import java.util.Map;
-
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -41,6 +37,9 @@ import com.esri.core.renderer.RampDefinition;
 import com.esri.core.tasks.ags.GenerateRendererTask;
 import com.esri.core.tasks.ags.GenerateRendererTaskParameters;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * This app uses the DynamicLayerMapService and the DynamicLayer to demonstrate
  * the Class break rendering. On clicking the field from the spinner it will
@@ -50,14 +49,17 @@ import com.esri.core.tasks.ags.GenerateRendererTaskParameters;
  * running.
  * 
  */
-public class DynamicLayerRendererActivity extends Activity {
+public class DynamicLayerRendererActivity extends AppCompatActivity {
 
-	MapView mMapView = null;
+    private static final int TRANSPARENCY = 10;
+    // Dialog to check progress for the service task
+    static ProgressDialog dialog = null;
+    final int layerid = 2;
+    MapView mMapView = null;
 	ProgressDialog progress = null;
 	ActionBar action = null;
 	ClassBreaksRenderer render = null;
 	ArcGISDynamicMapServiceLayer dynamicLayer = null;
-	
 	// query menu items
 	MenuItem mPop2007 = null;
 	MenuItem mPop2000 = null;
@@ -67,14 +69,7 @@ public class DynamicLayerRendererActivity extends Activity {
 	MenuItem mBlack = null;
 	MenuItem mHispanic = null;
 	MenuItem mAmeri_Es = null;
-
-	final int layerid = 2;
-
-	private static final int TRANSPARENCY = 10;
 	private String classificationField = "POP2000";
-
-	// Dialog to check progress for the service task
-	static ProgressDialog dialog = null;
 
 	/** Called when the activity is first created. */
 	@Override

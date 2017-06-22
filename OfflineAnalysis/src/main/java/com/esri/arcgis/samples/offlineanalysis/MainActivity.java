@@ -13,10 +13,6 @@
 
 package com.esri.arcgis.samples.offlineanalysis;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -42,13 +38,16 @@ import com.esri.core.raster.FunctionRasterSource;
 import com.esri.core.symbol.SimpleMarkerSymbol;
 import com.esri.core.symbol.SimpleMarkerSymbol.STYLE;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
 /**
  * The Offline Analysis sample shows how to do Line of Sight and Viewshed
  * analysis on raster DEM files on device. The sample shows how to extend the
  * MapOnTouchListener to customize the apps response to tapping on the map.
  *
  */
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
 	static final String TAG = "OfflineAnalysis";
 

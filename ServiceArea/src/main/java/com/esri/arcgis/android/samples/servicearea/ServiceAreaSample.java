@@ -13,21 +13,21 @@
 
 package com.esri.arcgis.android.samples.servicearea;
 
-import android.app.Activity;
+import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.app.ActionBar;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
+
 import com.esri.android.map.GraphicsLayer;
 import com.esri.android.map.MapView;
 import com.esri.android.map.ags.ArcGISTiledMapServiceLayer;
@@ -52,30 +52,24 @@ import com.esri.core.tasks.na.ServiceAreaTask;
  * map.Implemented Fragments to add the actions to set the break points.
  * 
  */
-public class ServiceAreaSample extends Activity implements
-		EditFragment.OnDialogClickedListener {
+public class ServiceAreaSample extends AppCompatActivity implements
+        EditFragment.OnDialogClickedListener {
 
-	MapView mMapView = null;
+    // Dialog to check progress for the service task
+    static ProgressDialog dialog = null;
+    static AlertDialog.Builder alertDialogBuilder = null;
+    static AlertDialog alertDialog = null;
+    // Spatial references used for projecting points
+    final SpatialReference wm = SpatialReference.create(102100);
+    final SpatialReference egs = SpatialReference.create(4326);
+    MapView mMapView = null;
 	ArcGISTiledMapServiceLayer baseMap = null;
-
 	// Graphics layer for displaying the service area polygons
 	GraphicsLayer serviceAreaLayer = null;
-
-	// Spatial references used for projecting points
-	final SpatialReference wm = SpatialReference.create(102100);
-	final SpatialReference egs = SpatialReference.create(4326);
-
 	// Three text boxes for specifying the break values
 	EditText break1, break2, break3;
-
 	// The action bar
 	ActionBar action = null;
-
-	// Dialog to check progress for the service task
-	static ProgressDialog dialog = null;
-	static AlertDialog.Builder alertDialogBuilder = null;
-	static AlertDialog alertDialog = null;
-
 	// Fragment Manager to add interfaces for fragments
 	FragmentManager fm = getFragmentManager();
 
@@ -190,10 +184,26 @@ public class ServiceAreaSample extends Activity implements
 	}
 
 	/**
-	 * The Task perform on the service layer has 3 methods to perform each time
+     * Invoked after you tap OK on the dialog.
+     */
+    @Override
+    public void onDialogClicked(double a1, double a2, double a3) {
+        // TODO Auto-generated method stub
+        FragmentTransaction trans1 = fm.beginTransaction();
+        trans1.remove(fm.findFragmentByTag("Set Breaks"));
+        trans1.commit();
+
+        breakValue1 = a1;
+        breakValue2 = a2;
+        breakValue3 = a3;
+
+    }
+
+    /**
+     * The Task perform on the service layer has 3 methods to perform each time
 	 * i.e. Pre-Execute, Do-In-Background and the Post-Execute.
-	 * 
-	 * @author Esri Android Team
+     *
+     * @author Esri Android Team
 	 */
 	class SolveServiceArea extends AsyncTask<Point, Void, ServiceAreaResult> {
 
@@ -293,22 +303,6 @@ public class ServiceAreaSample extends Activity implements
 			}
 
 		}
-
-	}
-
-	/**
-	 * Invoked after you tap OK on the dialog.
-	 */
-	@Override
-	public void onDialogClicked(double a1, double a2, double a3) {
-		// TODO Auto-generated method stub
-		FragmentTransaction trans1 = fm.beginTransaction();
-		trans1.remove(fm.findFragmentByTag("Set Breaks"));
-		trans1.commit();
-
-		breakValue1 = a1;
-		breakValue2 = a2;
-		breakValue3 = a3;
 
 	}
 

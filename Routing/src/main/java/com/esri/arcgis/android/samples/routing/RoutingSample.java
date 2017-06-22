@@ -13,10 +13,6 @@
 
 package com.esri.arcgis.android.samples.routing;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
@@ -57,11 +53,23 @@ import com.esri.core.tasks.na.RouteResult;
 import com.esri.core.tasks.na.RouteTask;
 import com.esri.core.tasks.na.StopGraphic;
 
-public class RoutingSample extends Activity implements
-		RoutingListFragment.onDrawerListSelectedListener,
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class RoutingSample extends AppCompatActivity implements
+        RoutingListFragment.onDrawerListSelectedListener,
 		RoutingDialogFragment.onGetRoute {
 	public static MapView map = null;
-	ArcGISTiledMapServiceLayer tileLayer;
+    // List of the directions for the current route (used for the ListActivity)
+    public static ArrayList<String> curDirections = null;
+    public static Point mLocation = null;
+    public static DrawerLayout mDrawerLayout;
+    // Handler for processing the results
+    final Handler mHandler = new Handler();
+    // Spatial references used for projecting points
+    final SpatialReference wm = SpatialReference.create(102100);
+    final SpatialReference egs = SpatialReference.create(4326);
+    ArcGISTiledMapServiceLayer tileLayer;
 	GraphicsLayer routeLayer, hiddenSegmentsLayer;
 	// Symbol used to make route segments "invisible"
 	SimpleLineSymbol segmentHider = new SimpleLineSymbol(Color.WHITE, 5);
@@ -69,38 +77,27 @@ public class RoutingSample extends Activity implements
 	SimpleLineSymbol segmentShower = new SimpleLineSymbol(Color.RED, 5);
 	// Label showing the current direction, time, and length
 	TextView directionsLabel;
-	// List of the directions for the current route (used for the ListActivity)
-	public static ArrayList<String> curDirections = null;
 	// Current route, route summary, and gps location
 	Route curRoute = null;
 	String routeSummary = null;
-	public static Point mLocation = null;
 	// Global results variable for calculating route on separate thread
 	RouteTask mRouteTask = null;
 	RouteResult mResults = null;
 	// Variable to hold server exception to show to user
 	Exception mException = null;
-
 	ImageView img_cancel;
 	ImageView img_currLocation;
 	ImageView img_getDirections;
-	public static DrawerLayout mDrawerLayout;
 	LocationDisplayManager ldm;
-	// Handler for processing the results
-	final Handler mHandler = new Handler();
-	final Runnable mUpdateResults = new Runnable() {
+    // Progress dialog to show when route is being calculated
+    ProgressDialog dialog;
+    // Index of the currently selected route segment (-1 = no selection)
+    int selectedSegmentID = -1;
+    final Runnable mUpdateResults = new Runnable() {
 		public void run() {
 			updateUI();
 		}
 	};
-
-	// Progress dialog to show when route is being calculated
-	ProgressDialog dialog;
-	// Spatial references used for projecting points
-	final SpatialReference wm = SpatialReference.create(102100);
-	final SpatialReference egs = SpatialReference.create(4326);
-	// Index of the currently selected route segment (-1 = no selection)
-	int selectedSegmentID = -1;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -404,42 +401,6 @@ public class RoutingSample extends Activity implements
 		curDirections.add("Destination");
 	}
 
-	private class MyLocationListener implements LocationListener {
-
-		public MyLocationListener() {
-			super();
-		}
-
-		/**
-		 * If location changes, update our current location. If being found for
-		 * the first time, zoom to our current position with a resolution of 20
-		 */
-		public void onLocationChanged(Location loc) {
-			if (loc == null)
-				return;
-			boolean zoomToMe = (mLocation == null) ? true : false;
-			mLocation = new Point(loc.getLongitude(), loc.getLatitude());
-			if (zoomToMe) {
-				Point p = (Point) GeometryEngine.project(mLocation, egs, wm);
-				map.zoomToResolution(p, 20.0);
-			}
-		}
-
-		public void onProviderDisabled(String provider) {
-			Toast.makeText(getApplicationContext(), "GPS Disabled",
-					Toast.LENGTH_SHORT).show();
-		}
-
-		public void onProviderEnabled(String provider) {
-			Toast.makeText(getApplicationContext(), "GPS Enabled",
-					Toast.LENGTH_SHORT).show();
-		}
-
-		public void onStatusChanged(String provider, int status, Bundle extras) {
-		}
-
-	}
-
 	@Override
 	protected void onPause() {
 		super.onPause();
@@ -504,27 +465,23 @@ public class RoutingSample extends Activity implements
 
 	}
 
-	/*
-	 * Clear the graphics and empty the directions list
-	 */
-
 	public void clearAll() {
-		
+
 		//Removing the graphics from the layer
 		routeLayer.removeAll();
 		hiddenSegmentsLayer.removeAll();
-		
-		curDirections = new ArrayList<String>();
+
+        curDirections = new ArrayList<String>();
 		mResults = null;
 		curRoute = null;
-		
-		//Setting to default text
+
+        //Setting to default text
 		directionsLabel.setText(getString(R.string.route_label));
-		
-		//Locking the Drawer
+
+        //Locking the Drawer
 		mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-		
-		//Removing the cancel icon
+
+        //Removing the cancel icon
 		img_cancel.setVisibility(View.GONE);
 
 		//Removing the RoutingListFragment if present
@@ -533,6 +490,46 @@ public class RoutingSample extends Activity implements
 			FragmentTransaction ft = fm.beginTransaction();
 			ft.remove(fm.findFragmentByTag("Nav Drawer"));
 			ft.commit();
+        }
+
+    }
+
+	/*
+     * Clear the graphics and empty the directions list
+	 */
+
+    private class MyLocationListener implements LocationListener {
+
+        public MyLocationListener() {
+            super();
+        }
+
+        /**
+         * If location changes, update our current location. If being found for
+         * the first time, zoom to our current position with a resolution of 20
+         */
+        public void onLocationChanged(Location loc) {
+            if (loc == null)
+                return;
+            boolean zoomToMe = (mLocation == null) ? true : false;
+            mLocation = new Point(loc.getLongitude(), loc.getLatitude());
+            if (zoomToMe) {
+                Point p = (Point) GeometryEngine.project(mLocation, egs, wm);
+                map.zoomToResolution(p, 20.0);
+            }
+        }
+
+        public void onProviderDisabled(String provider) {
+            Toast.makeText(getApplicationContext(), "GPS Disabled",
+                    Toast.LENGTH_SHORT).show();
+        }
+
+        public void onProviderEnabled(String provider) {
+            Toast.makeText(getApplicationContext(), "GPS Enabled",
+                    Toast.LENGTH_SHORT).show();
+        }
+
+        public void onStatusChanged(String provider, int status, Bundle extras) {
 		}
 
 	}

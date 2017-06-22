@@ -13,7 +13,6 @@
 
 package com.arcgis.android.samples.maps.maprotation;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,7 +27,7 @@ import com.esri.android.map.event.OnSingleTapListener;
  * image is added to the map, which rotates itself in response to the OnPinchListener set on the MapView. An
  * OnSingleTapListener allows the map rotation angle to be reset to 0 by tapping on the map.
  */
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     MapView mMapView;
     Compass mCompass;

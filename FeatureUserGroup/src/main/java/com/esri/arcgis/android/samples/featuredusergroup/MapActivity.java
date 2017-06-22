@@ -13,7 +13,6 @@
 
 package com.esri.arcgis.android.samples.featuredusergroup;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
@@ -47,7 +46,7 @@ import com.esri.core.portal.WebMap;
  * This stops MapActivity from being destroyed and restarted when orientation and keyboard
  * configuration changes occur.
  */
-public class MapActivity extends Activity {
+public class MapActivity extends AppCompatActivity {
   public static final String KEY_PORTAL_ITEM_ID = "com.esri.arcgis.android.samples.ItemId";
 
   private static final String TAG = "MapActivity";

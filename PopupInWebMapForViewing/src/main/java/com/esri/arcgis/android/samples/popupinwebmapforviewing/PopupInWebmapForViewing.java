@@ -13,10 +13,6 @@
 
 package com.esri.arcgis.android.samples.popupinwebmapforviewing;
 
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -41,6 +37,9 @@ import com.esri.core.map.popup.PopupInfo;
 import com.esri.core.tasks.ags.query.Query;
 import com.esri.core.tasks.ags.query.QueryTask;
 
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /*
  * NOTE: TO RUN THIS SAMPLE YOU NEED THE ANDROID SUPPORT LIBRARY! 
  * 
@@ -52,8 +51,8 @@ import com.esri.core.tasks.ags.query.QueryTask;
  * and follow the wizard.
  *
  */
-public class PopupInWebmapForViewing extends Activity {
-	private MapView map;
+public class PopupInWebmapForViewing extends AppCompatActivity {
+    private MapView map;
   private PopupContainer popupContainer;
   private PopupDialog popupDialog;
   private ProgressDialog progressDialog;

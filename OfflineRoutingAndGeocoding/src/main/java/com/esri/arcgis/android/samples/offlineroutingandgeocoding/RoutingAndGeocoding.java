@@ -1,10 +1,5 @@
 package com.esri.arcgis.android.samples.offlineroutingandgeocoding;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -44,12 +39,16 @@ import com.esri.core.tasks.na.RouteResult;
 import com.esri.core.tasks.na.RouteTask;
 import com.esri.core.tasks.na.StopGraphic;
 
-public class RoutingAndGeocoding extends Activity {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-  // Define ArcGIS Elements
-  MapView mMapView;
+public class RoutingAndGeocoding extends AppCompatActivity {
+
   final String extern = Environment.getExternalStorageDirectory().getPath();
   final String tpkPath = "/ArcGIS/samples/OfflineRouting/SanDiego.tpk";
+    // Define ArcGIS Elements
+    MapView mMapView;
   TiledLayer mTileLayer = new ArcGISLocalTiledLayer(extern + tpkPath);
   GraphicsLayer mGraphicsLayer = new GraphicsLayer(RenderingMode.DYNAMIC);
 
@@ -105,9 +104,47 @@ public class RoutingAndGeocoding extends Activity {
     }).start();
   }
 
+    private void showCallout(String text, Point location) {
+
+        // If the callout has never been created, inflate it
+        if (mCallout == null) {
+            LayoutInflater inflater = (LayoutInflater) getApplication().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            mCallout = inflater.inflate(R.layout.callout, null);
+        }
+
+        // Show the callout with the given text at the given location
+        ((TextView) mCallout.findViewById(R.id.calloutText)).setText(text);
+        mMapView.getCallout().show(location, mCallout);
+        mMapView.getCallout().setMaxWidth(700);
+    }
+
+    private void popToast(final String message, final boolean show) {
+        // Simple helper method for showing toast on the main thread
+        if (!show)
+            return;
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(RoutingAndGeocoding.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.routing_and_geocoding, menu);
+        return true;
+    }
+
   class TouchListener extends MapOnTouchListener {
 
     private int routeHandle = -1;
+
+      public TouchListener(Context context, MapView view) {
+          super(context, view);
+      }
 
     @Override
     public void onLongPress(MotionEvent point) {
@@ -236,10 +273,6 @@ public class RoutingAndGeocoding extends Activity {
       }
       return true;
     }
-
-    public TouchListener(Context context, MapView view) {
-      super(context, view);
-    }
   }
 
   class DirectionsItemListener implements OnItemSelectedListener {
@@ -260,40 +293,6 @@ public class RoutingAndGeocoding extends Activity {
     @Override
     public void onNothingSelected(AdapterView<?> arg0) {
     }
-  }
-
-  private void showCallout(String text, Point location) {
-
-    // If the callout has never been created, inflate it
-    if (mCallout == null) {
-      LayoutInflater inflater = (LayoutInflater) getApplication().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-      mCallout = inflater.inflate(R.layout.callout, null);
-    }
-
-    // Show the callout with the given text at the given location
-    ((TextView) mCallout.findViewById(R.id.calloutText)).setText(text);
-    mMapView.getCallout().show(location, mCallout);
-    mMapView.getCallout().setMaxWidth(700);
-  }
-
-  private void popToast(final String message, final boolean show) {
-    // Simple helper method for showing toast on the main thread
-    if (!show)
-      return;
-
-    runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        Toast.makeText(RoutingAndGeocoding.this, message, Toast.LENGTH_SHORT).show();
-      }
-    });
-  }
-
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    // Inflate the menu; this adds items to the action bar if it is present.
-    getMenuInflater().inflate(R.menu.routing_and_geocoding, menu);
-    return true;
   }
 
 }

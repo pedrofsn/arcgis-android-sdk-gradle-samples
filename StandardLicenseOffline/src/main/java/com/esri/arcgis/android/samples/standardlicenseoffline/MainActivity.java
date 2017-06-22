@@ -13,17 +13,6 @@
 
 package com.esri.arcgis.android.samples.standardlicenseoffline;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-
-import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -45,6 +34,16 @@ import com.esri.core.portal.Portal;
 import com.esri.core.portal.PortalInfo;
 import com.esri.core.runtime.LicenseLevel;
 import com.esri.core.runtime.LicenseResult;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 /*
  * This sample shows how a Standard license can be set for an app by logging in 
@@ -91,7 +90,7 @@ import com.esri.core.runtime.LicenseResult;
  *   relative path under the external storage folder.
  */
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
   // TODO: Set CLIENT_ID to a valid client id from developers.arcgis.com.
   // NOTE: When you release your app, you should ensure that the client id is 

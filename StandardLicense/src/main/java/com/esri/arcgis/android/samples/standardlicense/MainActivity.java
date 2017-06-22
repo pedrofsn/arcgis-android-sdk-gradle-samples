@@ -13,7 +13,6 @@
 
 package com.esri.arcgis.android.samples.standardlicense;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.widget.FrameLayout;
 
@@ -54,7 +53,7 @@ import com.esri.core.runtime.LicenseResult;
  * encrypted and saved to the device in a secure manner; the code here uses hardcoded strings instead for simplicity
  * of example code.
  */
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
   // TODO: initialize CLIENT_ID with a valid client id string
   // NOTE: When you release your app, you should ensure that the client id is encrypted and saved to the device 

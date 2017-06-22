@@ -13,7 +13,6 @@
 
 package com.arcgis.android.samples.maps.basemaps;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,23 +23,20 @@ import com.esri.android.map.event.OnStatusChangedListener;
 import com.esri.core.geometry.Polygon;
 
 
-public class MainActivity extends Activity {
-
-    // The MapView.
-    MapView mMapView = null;
-
-    // The basemap switching menu items.
-    MenuItem mStreetsMenuItem = null;
-    MenuItem mTopoMenuItem = null;
-    MenuItem mGrayMenuItem = null;
-    MenuItem mOceansMenuItem = null;
+public class MainActivity extends AppCompatActivity {
 
     // Create MapOptions for each type of basemap.
     final MapOptions mTopoBasemap = new MapOptions(MapOptions.MapType.TOPO);
     final MapOptions mStreetsBasemap = new MapOptions(MapOptions.MapType.STREETS);
     final MapOptions mGrayBasemap = new MapOptions(MapOptions.MapType.GRAY);
     final MapOptions mOceansBasemap = new MapOptions(MapOptions.MapType.OCEANS);
-
+    // The MapView.
+    MapView mMapView = null;
+    // The basemap switching menu items.
+    MenuItem mStreetsMenuItem = null;
+    MenuItem mTopoMenuItem = null;
+    MenuItem mGrayMenuItem = null;
+    MenuItem mOceansMenuItem = null;
     // The current map extent, use to set the extent of the map after switching basemaps.
     Polygon mCurrentMapExtent = null;
 

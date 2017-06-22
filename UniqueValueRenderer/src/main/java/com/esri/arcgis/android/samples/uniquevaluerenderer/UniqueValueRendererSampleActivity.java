@@ -13,11 +13,6 @@
 
 package com.esri.arcgis.android.samples.uniquevaluerenderer;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.res.Resources;
@@ -50,6 +45,10 @@ import com.esri.core.tasks.identify.IdentifyParameters;
 import com.esri.core.tasks.identify.IdentifyResult;
 import com.esri.core.tasks.identify.IdentifyTask;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * This sample allows the user to identify data based on the Unique Value
  * Rendering which defines the sub-regions of the map and on a single tap and
@@ -61,26 +60,23 @@ import com.esri.core.tasks.identify.IdentifyTask;
  * The output value shown in the spinner is the display field.
  * 
  */
-public class UniqueValueRendererSampleActivity extends Activity {
+public class UniqueValueRendererSampleActivity extends AppCompatActivity {
 
-	MapView mMapView = null;
+    // create UI objects
+    static ProgressDialog dialog;
+    MapView mMapView = null;
 	GraphicsLayer graphicsLayer = null;
 	Graphic fillGraphic = null;
-
 	boolean boolQuery = true;
 	ProgressDialog progress;
 	IdentifyParameters params = null;
 	Callout callout = null;
-
 	// UniqueValueRenderer used to assign unique values to feature
 	UniqueValueRenderer uvrenderer = null;
-
 	// Unique Values are objects containing the unique properties
 	UniqueValue uv1, uv2, uv3, uv4, uv5, uv6, uv7, uv8, uv9;
-
 	// Rendering Type which is used to fill the region
 	SimpleFillSymbol defaultsymbol = null;
-
 	// The set of unique attributes for rendering
 	String[] uniqueAttribute1 = new String[1];
 	String[] uniqueAttribute2 = new String[1];
@@ -91,9 +87,6 @@ public class UniqueValueRendererSampleActivity extends Activity {
 	String[] uniqueAttribute7 = new String[1];
 	String[] uniqueAttribute8 = new String[1];
 	String[] uniqueAttribute9 = new String[1];
-
-	// create UI objects
-	static ProgressDialog dialog;
 
 	/** Called when the activity is first created. */
 	@SuppressWarnings("serial")
@@ -296,15 +289,27 @@ public class UniqueValueRendererSampleActivity extends Activity {
 		return layout;
 	}
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mMapView.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mMapView.unpause();
+    }
+
 	/**
 	 * This class allows the user to customize the string shown in the callout.
 	 * By default its the display field name.
-	 * 
-	 * A spinner adapter defines two different views; one that shows the data in
+     *
+     * A spinner adapter defines two different views; one that shows the data in
 	 * the spinner itself and one that shows the data in the drop down list when
 	 * spinner is pressed.
-	 * 
-	 */
+     *
+     */
 	public class MyIdentifyAdapter extends IdentifyResultSpinnerAdapter {
 		String m_show = null;
 		List<IdentifyResult> resultList;
@@ -368,18 +373,6 @@ public class UniqueValueRendererSampleActivity extends Activity {
 
 			return txtView;
 		}
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mMapView.pause();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mMapView.unpause();
 	}
 
 	/**

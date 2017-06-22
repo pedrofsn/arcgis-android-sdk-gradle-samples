@@ -13,15 +13,13 @@
 
 package com.esri.arcgis.android.samples.geometryeditor;
 
-import java.util.ArrayList;
-
-import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -65,6 +63,8 @@ import com.esri.core.symbol.SimpleMarkerSymbol;
 import com.esri.core.symbol.Symbol;
 import com.esri.core.symbol.SymbolHelper;
 
+import java.util.ArrayList;
+
 /**
  * The purpose of this sample is to demonstrate how to create features (point, polyline, polygon) with the ArcGIS for
  * Android API. The sample supports template based editing for the three types of feature layers (point, line and
@@ -94,61 +94,34 @@ import com.esri.core.symbol.SymbolHelper;
  * Whenever a feature is being added, a long-press on the map displays a magnifier that allows a location to be selected
  * more accurately.
  */
-public class GeometryEditorActivity extends Activity {
+public class GeometryEditorActivity extends AppCompatActivity {
 
   protected static final String TAG = "EditGraphicElements";
 
   private static final String TAG_DIALOG_FRAGMENTS = "dialog";
 
   private static final String KEY_MAP_STATE = "com.esri.MapState";
-
-  private enum EditMode {
-    NONE, POINT, POLYLINE, POLYGON, SAVING
-  }
-
   Menu mOptionsMenu;
-
   MapView mMapView;
-
   String mMapState;
-
   DialogFragment mDialogFragment;
-
   GraphicsLayer mGraphicsLayerEditing;
-
   ArrayList<Point> mPoints = new ArrayList<Point>();
-
   ArrayList<Point> mMidPoints = new ArrayList<Point>();
-
   boolean mMidPointSelected = false;
-
   boolean mVertexSelected = false;
-
   int mInsertingIndex;
-
   EditMode mEditMode;
-
   boolean mClosingTheApp = false;
-
   ArrayList<EditingStates> mEditingStates = new ArrayList<EditingStates>();
-
   ArrayList<FeatureTypeData> mFeatureTypeList;
-
   ArrayList<FeatureTemplate> mTemplateList;
-
   ArrayList<ArcGISFeatureLayer> mFeatureLayerList;
-
   FeatureTemplate mTemplate;
-
   ArcGISFeatureLayer mTemplateLayer;
-
   SimpleMarkerSymbol mRedMarkerSymbol = new SimpleMarkerSymbol(Color.RED, 20, SimpleMarkerSymbol.STYLE.CIRCLE);
-
   SimpleMarkerSymbol mBlackMarkerSymbol = new SimpleMarkerSymbol(Color.BLACK, 20, SimpleMarkerSymbol.STYLE.CIRCLE);
-
   SimpleMarkerSymbol mGreenMarkerSymbol = new SimpleMarkerSymbol(Color.GREEN, 15, SimpleMarkerSymbol.STYLE.CIRCLE);
-
-
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -380,7 +353,7 @@ public class GeometryEditorActivity extends Activity {
       Geometry geom = GeometryEngine.simplify(multipath, mMapView.getSpatialReference());
       g = mTemplateLayer.createFeatureWithTemplate(mTemplate, geom);
     }
-    
+
     // Show progress bar and disable actions during the save
     setProgressBarIndeterminateVisibility(true);
     mEditMode = EditMode.SAVING;
@@ -406,7 +379,7 @@ public class GeometryEditorActivity extends Activity {
 
   /**
    * Reports result of 'Save' action to user and exit edit mode.
-   * 
+   *
    * @param results Results of applyEdits operation, or null if it failed.
    */
   void completeSaveAction(final FeatureEditResult[][] results) {
@@ -531,7 +504,7 @@ public class GeometryEditorActivity extends Activity {
 
   /**
    * Saves data for a set of feature templates.
-   * 
+   *
    * @param featureLayer Feature layer that the templates belong to.
    * @param templates Array of templates to save.
    */
@@ -607,7 +580,7 @@ public class GeometryEditorActivity extends Activity {
 
   /**
    * Shows or hides an action bar item.
-   * 
+   *
    * @param resId Resource ID of the item.
    * @param show true to show the item, false to hide it.
    */
@@ -619,7 +592,7 @@ public class GeometryEditorActivity extends Activity {
 
   /**
    * Checks if it's valid to save the feature currently being created.
-   * 
+   *
    * @return true if valid.
    */
   private boolean isSaveValid() {
@@ -776,6 +749,10 @@ public class GeometryEditorActivity extends Activity {
         break;
     }
     getActionBar().setTitle(resId);
+  }
+
+    private enum EditMode {
+        NONE, POINT, POLYLINE, POLYGON, SAVING
   }
 
   /**

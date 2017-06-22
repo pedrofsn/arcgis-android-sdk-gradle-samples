@@ -13,24 +13,6 @@
 
 package com.esri.arcgis.android.samples.GeoJSONEarthquakeMap;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -50,6 +32,23 @@ import com.esri.core.geometry.SpatialReference;
 import com.esri.core.map.Graphic;
 import com.esri.core.symbol.SimpleMarkerSymbol;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * This sample demonstrates how to use information from a GEOJson feed. For this
  * example, seven days significant earthquakes feed from USGS is used which is
@@ -57,7 +56,7 @@ import com.esri.core.symbol.SimpleMarkerSymbol;
  * 
  */
 
-public class GeoJSONEarthquakeMapActivity extends Activity {
+public class GeoJSONEarthquakeMapActivity extends AppCompatActivity {
 
 	MapView mMapView = null;
 	ArcGISTiledMapServiceLayer basemapTileLayer;
@@ -91,11 +90,127 @@ public class GeoJSONEarthquakeMapActivity extends Activity {
 
 	}
 
+    private void getEarthquakeEvents() {
+        int size;
+        String url = this.getResources().getString(R.string.earthquake_url);
+        try {
+            // Making the request and getting the response
+            HttpClient client = new DefaultHttpClient();
+            HttpGet req = new HttpGet(url);
+            HttpResponse res = client.execute(req);
+
+            // Converting the response stream to string
+            HttpEntity jsonentity = res.getEntity();
+            InputStream in = jsonentity.getContent();
+            String json_str = convertStreamToString(in);
+
+            JSONObject jsonobj = new JSONObject(json_str);
+            JSONArray feature_arr = jsonobj.getJSONArray("features");
+
+            SimpleMarkerSymbol symbol = new SimpleMarkerSymbol(Color.rgb(255,
+                    128, 64), 15, SimpleMarkerSymbol.STYLE.CIRCLE);
+
+            for (int i = 0; i < feature_arr.length(); i++) {
+
+                // Getting the coordinates and projecting them to map's spatial
+                // reference
+
+                JSONObject obj_geometry = feature_arr.getJSONObject(i)
+                        .getJSONObject("geometry");
+                double lon = Double.parseDouble(obj_geometry.getJSONArray("coordinates")
+                        .get(0).toString());
+                double lat = Double.parseDouble(obj_geometry.getJSONArray("coordinates")
+                        .get(1).toString());
+                Point point = (Point) GeometryEngine.project(
+                        new Point(lon, lat), SpatialReference.create(4326),
+                        mMapView.getSpatialReference());
+
+                JSONObject obj_properties = feature_arr.getJSONObject(i)
+                        .getJSONObject("properties");
+                Map<String, Object> attr = new HashMap<String, Object>();
+
+                String place = obj_properties.getString("place").toString();
+                attr.put("Location", place);
+
+                // Setting the size of the symbol based upon the magnitude
+                float mag = Float.valueOf(obj_properties.getString("mag")
+                        .toString());
+                size = getSizefromMag(mag);
+                symbol.setSize(size);
+                attr.put("Magnitude", mag);
+
+                // Converting time from unix time to date format
+                long timeStamp = Long.valueOf(obj_properties.getString("time")
+                        .toString());
+                java.util.Date time = new java.util.Date((long) timeStamp);
+                attr.put("Time ", time.toString());
+
+                attr.put("Rms ", obj_properties.getString("rms").toString());
+                attr.put("Gap ", obj_properties.getString("gap").toString());
+
+                // Add graphics to the graphic layer
+                graphicsLayer.addGraphic(new Graphic(point, symbol, attr));
+
+            }
+
+        } catch (ClientProtocolException e) {
+            // Catch exceptions here
+            e.printStackTrace();
+        } catch (IOException e) {
+            // Catch exceptions here
+            e.printStackTrace();
+        } catch (JSONException e) {
+            // Catch exceptions here
+            e.printStackTrace();
+        }
+
+    }
+
+    public String convertStreamToString(InputStream in) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+        StringBuilder jsonstr = new StringBuilder();
+        String line;
+        try {
+            while ((line = br.readLine()) != null) {
+                String t = line + "\n";
+                jsonstr.append(t);
+            }
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return jsonstr.toString();
+    }
+
+    private int getSizefromMag(float mag) {
+        int size;
+        if (mag < 5)
+            size = 7;
+        else if (mag >= 5 && mag < 6.5)
+            size = 10;
+        else
+            size = 15;
+
+        return size;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mMapView.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mMapView.unpause();
+    }
+
 	private class MyOnSingleTapListener implements OnSingleTapListener {
 
-		// Here, we use a single tap to popup the attributes for a report...
+        private static final long serialVersionUID = 1L;
+        // Here, we use a single tap to popup the attributes for a report...
 		Context _ctx;
-		private static final long serialVersionUID = 1L;
 
 		public MyOnSingleTapListener(Context ctx) {
 			_ctx = ctx;
@@ -208,122 +323,6 @@ public class GeoJSONEarthquakeMapActivity extends Activity {
 
 		}
 
-	}
-
-	private void getEarthquakeEvents() {
-		int size;
-		String url = this.getResources().getString(R.string.earthquake_url);
-		try {
-			// Making the request and getting the response
-			HttpClient client = new DefaultHttpClient();
-			HttpGet req = new HttpGet(url);
-			HttpResponse res = client.execute(req);
-
-			// Converting the response stream to string
-			HttpEntity jsonentity = res.getEntity();
-			InputStream in = jsonentity.getContent();
-			String json_str = convertStreamToString(in);
-
-			JSONObject jsonobj = new JSONObject(json_str);
-			JSONArray feature_arr = jsonobj.getJSONArray("features");
-
-			SimpleMarkerSymbol symbol = new SimpleMarkerSymbol(Color.rgb(255,
-					128, 64), 15, SimpleMarkerSymbol.STYLE.CIRCLE);
-
-			for (int i = 0; i < feature_arr.length(); i++) {
-
-				// Getting the coordinates and projecting them to map's spatial
-				// reference
-				
-				JSONObject obj_geometry = feature_arr.getJSONObject(i)
-						.getJSONObject("geometry");
-				double lon = Double.parseDouble(obj_geometry.getJSONArray("coordinates")
-						.get(0).toString());
-				double lat = Double.parseDouble(obj_geometry.getJSONArray("coordinates")
-						.get(1).toString());
-				Point point = (Point) GeometryEngine.project(
-						new Point(lon, lat), SpatialReference.create(4326),
-						mMapView.getSpatialReference());
-
-				JSONObject obj_properties = feature_arr.getJSONObject(i)
-						.getJSONObject("properties");
-				Map<String, Object> attr = new HashMap<String, Object>();
-
-				String place = obj_properties.getString("place").toString();
-				attr.put("Location", place);
-
-				// Setting the size of the symbol based upon the magnitude
-				float mag = Float.valueOf(obj_properties.getString("mag")
-						.toString());
-				size = getSizefromMag(mag);
-				symbol.setSize(size);
-				attr.put("Magnitude", mag);
-
-				// Converting time from unix time to date format
-				long timeStamp = Long.valueOf(obj_properties.getString("time")
-						.toString());
-				java.util.Date time = new java.util.Date((long) timeStamp);
-				attr.put("Time ", time.toString());
-
-				attr.put("Rms ", obj_properties.getString("rms").toString());
-				attr.put("Gap ", obj_properties.getString("gap").toString());
-
-				// Add graphics to the graphic layer
-				graphicsLayer.addGraphic(new Graphic(point, symbol, attr));
-
-			}
-
-		} catch (ClientProtocolException e) {
-			// Catch exceptions here
-			e.printStackTrace();
-		} catch (IOException e) {
-			// Catch exceptions here
-			e.printStackTrace();
-		} catch (JSONException e) {
-			// Catch exceptions here
-			e.printStackTrace();
-		}
-
-	}
-
-	public String convertStreamToString(InputStream in) {
-		BufferedReader br = new BufferedReader(new InputStreamReader(in));
-		StringBuilder jsonstr = new StringBuilder();
-		String line;
-		try {
-			while ((line = br.readLine()) != null) {
-				String t = line + "\n";
-				jsonstr.append(t);
-			}
-			br.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return jsonstr.toString();
-	}
-
-	private int getSizefromMag(float mag) {
-		int size;
-		if (mag < 5)
-			size = 7;
-		else if (mag >= 5 && mag < 6.5)
-			size = 10;
-		else
-			size = 15;
-
-		return size;
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mMapView.pause();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mMapView.unpause();
 	}
 
 }

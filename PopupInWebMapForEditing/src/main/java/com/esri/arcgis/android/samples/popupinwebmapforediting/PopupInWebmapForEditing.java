@@ -13,13 +13,6 @@
 
 package com.esri.arcgis.android.samples.popupinwebmapforediting;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -60,6 +53,13 @@ import com.esri.core.map.popup.PopupInfo;
 import com.esri.core.tasks.ags.query.Query;
 import com.esri.core.tasks.ags.query.QueryTask;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /*
  * NOTE: TO RUN THIS SAMPLE YOU NEED THE ANDROID SUPPORT LIBRARY! 
  * 
@@ -71,8 +71,8 @@ import com.esri.core.tasks.ags.query.QueryTask;
  * and follow the wizard.
  *
  */
-public class PopupInWebmapForEditing extends Activity {
-	private MapView map;
+public class PopupInWebmapForEditing extends AppCompatActivity {
+    private MapView map;
 	private PopupContainer popupContainer;
 	private PopupDialog popupDialog;
 	private ProgressDialog progressDialog;
@@ -254,6 +254,152 @@ public class PopupInWebmapForEditing extends Activity {
 		});
 	}
 
+    private void createEditorBar(final ArcGISFeatureLayer fl,
+                                 final boolean existing) {
+        if (fl == null || !fl.isInitialized() || !fl.isEditable())
+            return;
+
+        editorBar = new LinearLayout(this);
+
+        Button cancelButton = new Button(this);
+        cancelButton.setText("Cancel");
+        cancelButton.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (popupDialog != null)
+                    popupDialog.dismiss();
+            }
+        });
+        editorBar.addView(cancelButton);
+
+        final Button deleteButton = new Button(this);
+        deleteButton.setText("Delete");
+        deleteButton.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (popupContainer == null
+                        || popupContainer.getPopupCount() <= 0)
+                    return;
+                popupDialog.dismiss();
+
+                Feature fr = popupContainer.getCurrentPopup().getFeature();
+                Graphic gr = new Graphic(fr.getGeometry(), fr.getSymbol(), fr.getAttributes());
+                fl.applyEdits(null, new Graphic[]{gr}, null,
+                        new EditCallbackListener("Deleting feature", fl,
+                                existing));
+
+            }
+        });
+        if (existing)
+            editorBar.addView(deleteButton);
+
+        final Button attachmentButton = new Button(this);
+        attachmentButton.setText("Add Attachment");
+        attachmentButton.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(new Intent(Intent.ACTION_PICK,
+                        MediaStore.Images.Media.INTERNAL_CONTENT_URI), 1);
+            }
+        });
+        if (!existing && fl.hasAttachments())
+            attachmentButton.setVisibility(View.VISIBLE);
+        else
+            attachmentButton.setVisibility(View.INVISIBLE);
+        editorBar.addView(attachmentButton);
+
+        final Button saveButton = new Button(this);
+        saveButton.setText("Save");
+        if (existing)
+            saveButton.setVisibility(View.INVISIBLE);
+        saveButton.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (popupContainer == null
+                        || popupContainer.getPopupCount() <= 0)
+                    return;
+                popupDialog.dismiss();
+
+                Popup popup = popupContainer.getCurrentPopup();
+                Feature fr = popup.getFeature();
+                Map<String, Object> attributes = fr.getAttributes();
+                Map<String, Object> updatedAttrs = popup.getUpdatedAttributes();
+                for (Entry<String, Object> entry : updatedAttrs.entrySet()) {
+                    attributes.put(entry.getKey(), entry.getValue());
+                }
+                Graphic newgr = new Graphic(fr.getGeometry(), null, attributes);
+                if (existing)
+                    fl.applyEdits(null, null, new Graphic[]{newgr},
+                            new EditCallbackListener("Saving edits", fl,
+                                    existing));
+                else
+                    fl.applyEdits(new Graphic[]{newgr}, null, null,
+                            new EditCallbackListener("Creating new feature",
+                                    fl, existing));
+            }
+        });
+        editorBar.addView(saveButton);
+
+        final Button editButton = new Button(map.getContext());
+        editButton.setText("Edit");
+        editButton.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (popupContainer == null
+                        || popupContainer.getPopupCount() <= 0)
+                    return;
+
+                popupContainer.getCurrentPopup().setEditMode(true);
+                saveButton.setVisibility(View.VISIBLE);
+                deleteButton.setVisibility(View.INVISIBLE);
+                editButton.setVisibility(View.INVISIBLE);
+                if (fl.hasAttachments())
+                    attachmentButton.setVisibility(View.VISIBLE);
+            }
+        });
+        if (existing) {
+            editorBar.addView(editButton);
+        }
+
+        popupContainer.getPopupContainerView().addView(editorBar, 0);
+
+    }
+
+    private void createPopupViews(final int id) {
+        if (id != popupContainer.hashCode()) {
+            if (progressDialog != null && progressDialog.isShowing()
+                    && count.intValue() == 0)
+                progressDialog.dismiss();
+
+            return;
+        }
+
+        if (popupDialog == null) {
+            if (progressDialog != null && progressDialog.isShowing())
+                progressDialog.dismiss();
+
+            // Create a dialog for the popups and display it.
+            popupDialog = new PopupDialog(map.getContext(), popupContainer);
+            popupDialog.show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (resultCode == Activity.RESULT_OK && data != null
+                && popupContainer != null) {
+            // Add the selected media as attachment.
+            Uri selectedImage = data.getData();
+            popupContainer.getCurrentPopup().addAttachment(selectedImage);
+        }
+    }
+
 	private class EditCallbackListener implements
 			CallbackListener<FeatureEditResult[][]> {
 		private String operation = "Operation ";
@@ -396,141 +542,6 @@ public class PopupInWebmapForEditing extends Activity {
 			});
 		}
 
-	}
-
-	private void createEditorBar(final ArcGISFeatureLayer fl,
-			final boolean existing) {
-		if (fl == null || !fl.isInitialized() || !fl.isEditable())
-			return;
-
-		editorBar = new LinearLayout(this);
-
-		Button cancelButton = new Button(this);
-		cancelButton.setText("Cancel");
-		cancelButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				if (popupDialog != null)
-					popupDialog.dismiss();
-			}
-		});
-		editorBar.addView(cancelButton);
-
-		final Button deleteButton = new Button(this);
-		deleteButton.setText("Delete");
-		deleteButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				if (popupContainer == null
-						|| popupContainer.getPopupCount() <= 0)
-					return;
-				popupDialog.dismiss();
-
-				Feature fr = popupContainer.getCurrentPopup().getFeature();
-				Graphic gr = new Graphic(fr.getGeometry(), fr.getSymbol(), fr.getAttributes());
-				fl.applyEdits(null, new Graphic[] { gr }, null,
-						new EditCallbackListener("Deleting feature", fl,
-								existing));
-
-			}
-		});
-		if (existing)
-			editorBar.addView(deleteButton);
-
-		final Button attachmentButton = new Button(this);
-		attachmentButton.setText("Add Attachment");
-		attachmentButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				startActivityForResult(new Intent(Intent.ACTION_PICK,
-						MediaStore.Images.Media.INTERNAL_CONTENT_URI), 1);
-			}
-		});
-		if (!existing && fl.hasAttachments())
-			attachmentButton.setVisibility(View.VISIBLE);
-		else
-			attachmentButton.setVisibility(View.INVISIBLE);
-		editorBar.addView(attachmentButton);
-
-		final Button saveButton = new Button(this);
-		saveButton.setText("Save");
-		if (existing)
-			saveButton.setVisibility(View.INVISIBLE);
-		saveButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				if (popupContainer == null
-						|| popupContainer.getPopupCount() <= 0)
-					return;
-				popupDialog.dismiss();
-
-				Popup popup = popupContainer.getCurrentPopup();
-				Feature fr = popup.getFeature();
-				Map<String, Object> attributes = fr.getAttributes();
-				Map<String, Object> updatedAttrs = popup.getUpdatedAttributes();
-				for (Entry<String, Object> entry : updatedAttrs.entrySet()) {
-					attributes.put(entry.getKey(), entry.getValue());
-				}
-				Graphic newgr = new Graphic(fr.getGeometry(), null, attributes);
-				if (existing)
-					fl.applyEdits(null, null, new Graphic[] { newgr },
-							new EditCallbackListener("Saving edits", fl,
-									existing));
-				else
-					fl.applyEdits(new Graphic[] { newgr }, null, null,
-							new EditCallbackListener("Creating new feature",
-									fl, existing));
-			}
-		});
-		editorBar.addView(saveButton);
-
-		final Button editButton = new Button(map.getContext());
-		editButton.setText("Edit");
-		editButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				if (popupContainer == null
-						|| popupContainer.getPopupCount() <= 0)
-					return;
-
-				popupContainer.getCurrentPopup().setEditMode(true);
-				saveButton.setVisibility(View.VISIBLE);
-				deleteButton.setVisibility(View.INVISIBLE);
-				editButton.setVisibility(View.INVISIBLE);
-				if (fl.hasAttachments())
-					attachmentButton.setVisibility(View.VISIBLE);
-			}
-		});
-		if (existing) {
-			editorBar.addView(editButton);
-		}
-
-		popupContainer.getPopupContainerView().addView(editorBar, 0);
-
-	}
-
-	private void createPopupViews(final int id) {
-		if (id != popupContainer.hashCode()) {
-			if (progressDialog != null && progressDialog.isShowing()
-					&& count.intValue() == 0)
-				progressDialog.dismiss();
-
-			return;
-		}
-
-		if (popupDialog == null) {
-			if (progressDialog != null && progressDialog.isShowing())
-				progressDialog.dismiss();
-
-			// Create a dialog for the popups and display it.
-			popupDialog = new PopupDialog(map.getContext(), popupContainer);
-			popupDialog.show();
-		}
 	}
 
 	// Query feature layer by hit test
@@ -697,17 +708,6 @@ public class PopupInWebmapForEditing extends Activity {
 			}
 			createPopupViews(id);
 
-		}
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-		if (resultCode == Activity.RESULT_OK && data != null
-				&& popupContainer != null) {
-			// Add the selected media as attachment.
-			Uri selectedImage = data.getData();
-			popupContainer.getCurrentPopup().addAttachment(selectedImage);
 		}
 	}
 

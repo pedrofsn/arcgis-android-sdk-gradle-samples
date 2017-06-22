@@ -13,7 +13,6 @@
 
 package com.arcgis.android.samples.cloudportal.featureservicetablequery;
 
-import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Menu;
@@ -34,7 +33,7 @@ import com.esri.core.map.Field;
 import com.esri.core.tasks.query.QueryParameters;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     public FeatureLayer featureLayer;
     public GeodatabaseFeatureServiceTable featureServiceTable;

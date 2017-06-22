@@ -13,7 +13,6 @@
 
 package com.esri.arcgis.android.samples.wmslayer;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,7 +25,7 @@ import com.esri.android.map.ogc.WMSLayer;
  * The WMS Layer is provided by:
  *    <a href="http://openweathermap.org/">Open Weather Map</a>
  */
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     MapView mMapView;
     WMSLayer wmsLayer;

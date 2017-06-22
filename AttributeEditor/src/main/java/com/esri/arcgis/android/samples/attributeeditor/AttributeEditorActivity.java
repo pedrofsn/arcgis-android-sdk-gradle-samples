@@ -13,10 +13,6 @@
 
 package com.esri.arcgis.android.samples.attributeeditor;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import android.app.Activity;
 import android.app.Dialog;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -32,8 +28,8 @@ import android.widget.Spinner;
 import com.esri.android.map.MapView;
 import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
 import com.esri.android.map.ags.ArcGISFeatureLayer;
-import com.esri.android.map.ags.ArcGISTiledMapServiceLayer;
 import com.esri.android.map.ags.ArcGISFeatureLayer.MODE;
+import com.esri.android.map.ags.ArcGISTiledMapServiceLayer;
 import com.esri.android.map.event.OnSingleTapListener;
 import com.esri.android.map.event.OnStatusChangedListener;
 import com.esri.arcgis.android.samples.attributeeditor.FeatureLayerUtils.FieldType;
@@ -48,31 +44,25 @@ import com.esri.core.symbol.SimpleLineSymbol;
 import com.esri.core.tasks.SpatialRelationship;
 import com.esri.core.tasks.ags.query.Query;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Main activity class for the Attribute Editor Sample
  */
-public class AttributeEditorActivity extends Activity {
+public class AttributeEditorActivity extends AppCompatActivity {
 
+    public static final String TAG = "AttributeEditorSample";
+    static final int ATTRIBUTE_EDITOR_DIALOG_ID = 1;
   MapView mapView;
-
   ArcGISFeatureLayer featureLayer;
   ArcGISDynamicMapServiceLayer dmsl;
-
   Point pointClicked;
-
   LayoutInflater inflator;
-
   AttributeListAdapter listAdapter;
-  
   Envelope initextent;
-
   ListView listView;
-
   View listLayout;
-
-  public static final String TAG = "AttributeEditorSample";
-
-  static final int ATTRIBUTE_EDITOR_DIALOG_ID = 1;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {

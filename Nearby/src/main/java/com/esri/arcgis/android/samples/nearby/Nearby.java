@@ -13,17 +13,6 @@
 
 package com.esri.arcgis.android.samples.nearby;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.HashMap;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -65,6 +54,16 @@ import com.esri.core.map.Graphic;
 import com.esri.core.symbol.PictureMarkerSymbol;
 import com.esri.core.symbol.Symbol;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.HashMap;
+
 /**
  * The purpose of this sample is to leverage your devices GPS position to zoom
  * to your location on the map. When you click on the either of the buttons on
@@ -73,7 +72,7 @@ import com.esri.core.symbol.Symbol;
  * setting to make sure that location services are enabled for the app.
  * 
  */
-public class Nearby extends Activity {
+public class Nearby extends AppCompatActivity {
 
 	final static int TITLE_ID = 1;
 	final static int REVIEW_ID = 2;
@@ -331,6 +330,27 @@ public class Nearby extends Activity {
 	 * the query criteria like'coffee', 'shop', etc.
 	 */
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mMapView = null;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (lDisplayManager != null)
+            lDisplayManager.start();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (lDisplayManager != null)
+            lDisplayManager.stop();
+
+    }
+
 	private class AsyncLocalSearch extends AsyncTask<String, Void, Boolean> {
 		// Determine if the query returned an array of results
 		boolean success = false;
@@ -488,29 +508,23 @@ public class Nearby extends Activity {
 
 	}
 
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		mMapView = null;
-	}
-
 	/**
-	 * 
-	 * Custom view to draw the rating star
-	 * 
-	 */
+     *
+     * Custom view to draw the rating star
+     *
+     */
 	private class StarView extends View {
 
-		private Bitmap mBitmap;
+        int width = 200;
+        int height = 40;
+        float[] points = new float[10];
+        float dy;
+        private Bitmap mBitmap;
 		private Paint mPaint = new Paint();
 		private Canvas mCanvas = new Canvas();
 		private Path mPath = new Path();
 		private RectF mRect = new RectF();
-		int width = 200;
-		int height = 40;
 		private int mLevel = 0;
-		float[] points = new float[10];
-		float dy;
 
 		public StarView(Context context) {
 			super(context);
@@ -581,21 +595,6 @@ public class Nearby extends Activity {
 
 			setMeasuredDimension(width, height);
 		}
-
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		if (lDisplayManager != null)
-			lDisplayManager.start();
-	}
-
-	@Override
-	protected void onStop() {
-		super.onStop();
-		if (lDisplayManager != null)
-			lDisplayManager.stop();
 
 	}
 

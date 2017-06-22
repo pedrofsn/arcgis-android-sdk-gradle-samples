@@ -13,7 +13,6 @@
 
 package com.arcgis.android.samples.maps.helloworld;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,7 +20,7 @@ import android.view.MenuItem;
 import com.esri.android.map.MapView;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     MapView mMapView;
 

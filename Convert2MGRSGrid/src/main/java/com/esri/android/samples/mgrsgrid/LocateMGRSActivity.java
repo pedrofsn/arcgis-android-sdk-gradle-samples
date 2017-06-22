@@ -13,7 +13,6 @@
 
 package com.esri.android.samples.mgrsgrid;
 
-import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -28,7 +27,7 @@ import com.esri.core.map.Graphic;
 import com.esri.core.symbol.SimpleMarkerSymbol;
 import com.esri.core.symbol.TextSymbol;
 
-public class LocateMGRSActivity extends Activity {
+public class LocateMGRSActivity extends AppCompatActivity {
 
 	MapView mMapView;
 	GraphicsLayer gl = null;

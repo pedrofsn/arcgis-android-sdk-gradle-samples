@@ -13,7 +13,6 @@
 
 package com.esri.arcgis.android.samples.classbreaksrenderer;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -43,13 +42,13 @@ import com.esri.core.renderer.ClassBreaksRenderer;
  * 
  */
 
-public class ClassBreaksRendererActivity extends Activity {
+public class ClassBreaksRendererActivity extends AppCompatActivity {
 
-	MapView mMapView;
+    static int LAYER_ID = 0;
+    MapView mMapView;
 	GeodatabaseFeatureServiceTable table;
 	FeatureLayer feature_layer;
 	ClassBreaksRenderer wind_renderer;
-	static int LAYER_ID = 0;
 	View calloutView;
 
 	/** Called when the activity is first created. */

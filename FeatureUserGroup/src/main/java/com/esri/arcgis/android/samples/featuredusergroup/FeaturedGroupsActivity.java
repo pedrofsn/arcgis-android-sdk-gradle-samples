@@ -13,7 +13,6 @@
 
 package com.esri.arcgis.android.samples.featuredusergroup;
 
-import android.app.Activity;
 import android.app.FragmentManager;
 import android.os.Bundle;
 
@@ -28,7 +27,7 @@ import android.os.Bundle;
  * This is the main activity of this sample. It simply hosts the GroupsFragment and the
  * ItemsFragment. On startup it launches a GroupsFragment.
  */
-public class FeaturedGroupsActivity extends Activity {
+public class FeaturedGroupsActivity extends AppCompatActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {

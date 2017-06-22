@@ -13,7 +13,6 @@
 
 package com.esri.android.samples.mbtiles;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -24,7 +23,7 @@ import android.widget.Toast;
 import com.esri.android.map.MapView;
 import com.esri.android.map.ags.ArcGISTiledMapServiceLayer;
 
-public class LocalMBTiles extends Activity {
+public class LocalMBTiles extends AppCompatActivity {
   MapView mMapView = null;
   ArcGISTiledMapServiceLayer tileLayer;
   boolean activeNetwork;

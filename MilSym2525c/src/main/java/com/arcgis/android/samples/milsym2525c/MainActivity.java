@@ -1,13 +1,5 @@
 package com.arcgis.android.samples.milsym2525c;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-
-import org.xmlpull.v1.XmlPullParserException;
-
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -28,7 +20,14 @@ import com.esri.core.symbol.advanced.MessageHelper;
 import com.esri.core.symbol.advanced.MessageProcessor;
 import com.esri.core.symbol.advanced.SymbolDictionary.DictionaryType;
 
-public class MainActivity extends Activity {
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
 
 	MapView mMapView;
 	MessageProcessor mProcessor;

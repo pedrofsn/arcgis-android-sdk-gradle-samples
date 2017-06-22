@@ -13,14 +13,13 @@
 
 package com.arcgis.android.samples.maps.fragmentmanagement;
 
-import android.app.Activity;
 import android.app.FragmentManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class MainActivity extends Activity implements BasemapListFragment.BasemapListListener{
+public class MainActivity extends AppCompatActivity implements BasemapListFragment.BasemapListListener {
 
     private static final String TAG_LIST_FRAGMENT = "BasemapListFragment";
     private static final String TAG_MAP_FRAGMENT = "MapFragment";

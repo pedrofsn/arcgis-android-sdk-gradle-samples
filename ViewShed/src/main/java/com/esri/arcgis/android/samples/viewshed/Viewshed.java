@@ -13,11 +13,6 @@
 
 package com.esri.arcgis.android.samples.viewshed;
 
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -45,6 +40,10 @@ import com.esri.core.tasks.ags.geoprocessing.GPParameter;
 import com.esri.core.tasks.ags.geoprocessing.GPResultResource;
 import com.esri.core.tasks.ags.geoprocessing.Geoprocessor;
 
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * This sample application illustrates the usage of Geoprocessing. It allows the
  * user to select a point on the map and see all the areas that are visible
@@ -52,19 +51,17 @@ import com.esri.core.tasks.ags.geoprocessing.Geoprocessor;
  * 
  */
 
-public class Viewshed extends Activity {
+public class Viewshed extends AppCompatActivity {
 
 	protected static final int CLOSE_LOADING_WINDOW = 0;
 	protected static final int CANCEL_LOADING_WINDOW = 1;
 	MapView map = null;
-	private ArrayList<GPParameter> params;
 	Geoprocessor gp;
 	GraphicsLayer gLayer;
 	ProgressDialog dialog = null;
 	Timer cancelViewShed = new Timer();
 	Point mappoint;
 	int gId=0;
-	
 	Handler uiHandler = new Handler(new Callback() {
 		@Override
 		public boolean handleMessage(final Message msg) {
@@ -88,6 +85,7 @@ public class Viewshed extends Activity {
 		}
 
 	});
+    private ArrayList<GPParameter> params;
 
 	/**
 	 * Called when the activity is first created.
@@ -161,68 +159,12 @@ public class Viewshed extends Activity {
 		}
 	}
 
-	class ViewShedQuery extends
-			AsyncTask<ArrayList<GPParameter>, Void, GPParameter[]> {
-
-		GPParameter[] outParams = null;
-
-		/**
-		 * Method onPostExecute.
-		 * 
-		 * @param result
-		 *            GPParameter[]
-		 */
-		@Override
-		protected void onPostExecute(GPParameter[] result) {
-			if (result == null)
-				return;
-			for (int i = 0; i < result.length; i++) {
-				if (result[i] instanceof GPFeatureRecordSetLayer) {
-
-					GPFeatureRecordSetLayer fsl = (GPFeatureRecordSetLayer) result[i];
-					for (Graphic feature : fsl.getGraphics()) {
-						Graphic g = new Graphic(feature.getGeometry(),
-								new SimpleFillSymbol(Color.CYAN));
-						gLayer.addGraphic(g);
-					}
-				}
-			}
-			uiHandler.sendEmptyMessage(CLOSE_LOADING_WINDOW);
-		}
-
-		/**
-		 * Method doInBackground.
-		 * 
-		 * @param params1
-		 *            ArrayList<GPParameter>[]
-		 * @return GPParameter[]
-		 */
-		@Override
-		protected GPParameter[] doInBackground(
-				ArrayList<GPParameter>... params1) {
-
-			gp = new Geoprocessor(
-					"http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed");
-			/*
-			 * API v1.1 requires SpatialReference parameter
-			 */
-			gp.setOutSR(map.getSpatialReference());
-			try {
-				GPResultResource rr = gp.execute(params1[0]);
-				outParams = rr.getOutputParameters();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			return outParams;
-		}
-	}
-
 	/**
 	 * 1) Create the GP object by passing it the url. 2) Create the input
 	 * parameters and add to the GPParameter object. 3) Pass these params to the
 	 * execute method.
-	 * 
-	 * @param mPoint
+     *
+     * @param mPoint
 	 *            - point selected on the map by the user
 	 */
 	@SuppressWarnings("unchecked")
@@ -274,6 +216,60 @@ public class Viewshed extends Activity {
 	protected void onResume() {
 		super.onResume();
 		map.unpause();
+    }
+
+    class ViewShedQuery extends
+            AsyncTask<ArrayList<GPParameter>, Void, GPParameter[]> {
+
+        GPParameter[] outParams = null;
+
+        /**
+         * Method onPostExecute.
+         *
+         * @param result GPParameter[]
+         */
+        @Override
+        protected void onPostExecute(GPParameter[] result) {
+            if (result == null)
+                return;
+            for (int i = 0; i < result.length; i++) {
+                if (result[i] instanceof GPFeatureRecordSetLayer) {
+
+                    GPFeatureRecordSetLayer fsl = (GPFeatureRecordSetLayer) result[i];
+                    for (Graphic feature : fsl.getGraphics()) {
+                        Graphic g = new Graphic(feature.getGeometry(),
+                                new SimpleFillSymbol(Color.CYAN));
+                        gLayer.addGraphic(g);
+                    }
+                }
+            }
+            uiHandler.sendEmptyMessage(CLOSE_LOADING_WINDOW);
+        }
+
+        /**
+         * Method doInBackground.
+         *
+         * @param params1 ArrayList<GPParameter>[]
+         * @return GPParameter[]
+         */
+        @Override
+        protected GPParameter[] doInBackground(
+                ArrayList<GPParameter>... params1) {
+
+            gp = new Geoprocessor(
+                    "http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed");
+            /*
+			 * API v1.1 requires SpatialReference parameter
+			 */
+            gp.setOutSR(map.getSpatialReference());
+            try {
+                GPResultResource rr = gp.execute(params1[0]);
+                outParams = rr.getOutputParameters();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return outParams;
+        }
 	}
 
 }

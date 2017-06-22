@@ -13,11 +13,6 @@
 
 package com.esri.arcgis.android.samples.identifytask;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.res.Resources;
@@ -44,6 +39,10 @@ import com.esri.core.tasks.identify.IdentifyParameters;
 import com.esri.core.tasks.identify.IdentifyResult;
 import com.esri.core.tasks.identify.IdentifyTask;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * This sample allows the user to identify data based on single tap and view the
  * results in a callout window which has a spinner in its layout. Also the user
@@ -54,14 +53,13 @@ import com.esri.core.tasks.identify.IdentifyTask;
  * 
  */
 
-public class Identify extends Activity {
+public class Identify extends AppCompatActivity {
 
-	// create ArcGIS objects
+    // create UI objects
+    static ProgressDialog dialog;
+    // create ArcGIS objects
 	MapView mMapView = null;
 	IdentifyParameters params = null;
-
-	// create UI objects
-	static ProgressDialog dialog;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -146,15 +144,27 @@ public class Identify extends Activity {
 		return layout;
 	}
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mMapView.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mMapView.unpause();
+    }
+
 	/**
 	 * This class allows the user to customize the string shown in the callout.
 	 * By default its the display field name.
-	 * 
-	 * A spinner adapter defines two different views; one that shows the data in
+     *
+     * A spinner adapter defines two different views; one that shows the data in
 	 * the spinner itself and one that shows the data in the drop down list when
 	 * spinner is pressed.
-	 * 
-	 */
+     *
+     */
 	public class MyIdentifyAdapter extends IdentifyResultSpinnerAdapter {
 		String m_show = null;
 		List<IdentifyResult> resultList;
@@ -235,18 +245,6 @@ public class Identify extends Activity {
 
 			return txtView;
 		}
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mMapView.pause();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mMapView.unpause();
 	}
 
 	private class MyIdentifyTask extends

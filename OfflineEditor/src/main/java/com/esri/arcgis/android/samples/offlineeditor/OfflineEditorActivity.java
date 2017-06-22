@@ -13,10 +13,6 @@ package com.esri.arcgis.android.samples.offlineeditor;
  *
  */
 
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -53,10 +49,13 @@ import com.esri.core.symbol.SimpleMarkerSymbol;
 import com.esri.core.symbol.Symbol;
 import com.esri.core.table.TableException;
 
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Allows you to make edits on the map being offline.
  */
-public class OfflineEditorActivity extends Activity {
+public class OfflineEditorActivity extends AppCompatActivity {
 
 	protected static final String TAG = "OfflineEditorActivity";
 
@@ -65,29 +64,17 @@ public class OfflineEditorActivity extends Activity {
 	private static final int POLYLINE = 1;
 
 	private static final int POLYGON = 2;
-
-	private static MapView mapView;
-
+    static ProgressDialog progress;
+    private static MapView mapView;
 	GraphicsLayer graphicsLayer;
-
 	GraphicsLayer graphicsLayerEditing;
-
 	GraphicsLayer highlightGraphics;
-
 	boolean featureUpdate = false;
-
 	boolean mDatabaseInitialized = false;
-
 	boolean onlineData = true;
-
 	long featureUpdateId;
-
 	int addedGraphicId;
-
 	MyTouchListener myListener;
-
-	private TemplatePicker tp;
-
 	ArrayList<Point> points = new ArrayList<Point>();
 
 	ArrayList<Point> mpoints = new ArrayList<Point>();
@@ -99,20 +86,13 @@ public class OfflineEditorActivity extends Activity {
 	int insertingindex;
 
 	int editingmode;
-
-	static ProgressDialog progress;
-
 	MenuItem editMenuItem;
-
 	MenuItem offlineMenuItem;
-
 	MenuItem onlineMenuItem;
-
 	ArrayList<EditingStates> editingstates = new ArrayList<EditingStates>();
-
 	FeatureTemplate template;
-
-	@SuppressWarnings("unused")
+    private TemplatePicker tp;
+    @SuppressWarnings("unused")
 	private Menu menu;
 
 	@Override
@@ -298,216 +278,6 @@ public class OfflineEditorActivity extends Activity {
 			vertexselected = state.vertexselected1;
 			insertingindex = state.insertingindex1;
 			refresh();
-		}
-	}
-
-	/**
-	 * An instance of this class is created when a new point is to be
-	 * added/moved/deleted. Hence we can describe this class as a container of
-	 * points selected. Points, vertexes, or mid points.
-	 */
-	public class EditingStates {
-		ArrayList<Point> points1 = new ArrayList<Point>();
-
-		boolean midpointselected1 = false;
-
-		boolean vertexselected1 = false;
-
-		int insertingindex1;
-
-		public EditingStates(ArrayList<Point> points, boolean midpointselected,
-				boolean vertexselected, int insertingindex) {
-			this.points1.addAll(points);
-			this.midpointselected1 = midpointselected;
-			this.vertexselected1 = vertexselected;
-			this.insertingindex1 = insertingindex;
-		}
-	}
-
-	/*
-	 * MapView's touch listener
-	 */
-	public class MyTouchListener extends MapOnTouchListener {
-		MapView map;
-
-		Context context;
-
-		boolean redrawCache = true;
-
-		public MyTouchListener(Context context, MapView view) {
-			super(context, view);
-			this.context = context;
-			map = view;
-		}
-
-		@Override
-		public boolean onDragPointerMove(MotionEvent from, final MotionEvent to) {
-			if (tp != null && !onlineData) {
-				if (getTemplatePicker().getselectedTemplate() != null) {
-					setEditingMode();
-				}
-			}
-			return super.onDragPointerMove(from, to);
-		}
-
-		@Override
-		public boolean onDragPointerUp(MotionEvent from, final MotionEvent to) {
-			if (tp != null && !onlineData) {
-				if (getTemplatePicker().getselectedTemplate() != null) {
-					setEditingMode();
-				}
-			}
-			return super.onDragPointerUp(from, to);
-		}
-
-		/**
-		 * In this method we check if the point clicked on the map denotes a new
-		 * point or means an existing vertex must be moved.
-		 */
-		@Override
-		public boolean onSingleTap(final MotionEvent e) {
-			if (tp != null && !onlineData) {
-
-				Point point = map.toMapPoint(new Point(e.getX(), e.getY()));
-				if (getTemplatePicker().getselectedTemplate() != null) {
-					setEditingMode();
-
-				}
-				if (getTemplatePicker().getSelectedLayer() != null) {
-					long[] featureIds = ((FeatureLayer) mapView
-							.getLayerByID(getTemplatePicker()
-									.getSelectedLayer().getID()))
-							.getFeatureIDs(e.getX(), e.getY(), 25);
-					if (featureIds.length > 0 && (!featureUpdate)) {
-						featureUpdateId = featureIds[0];
-						GeodatabaseFeature gdbFeatureSelected = (GeodatabaseFeature) ((FeatureLayer) mapView
-								.getLayerByID(getTemplatePicker()
-										.getSelectedLayer().getID()))
-								.getFeature(featureIds[0]);
-						if (editingmode == POLYLINE || editingmode == POLYGON) {
-							if (gdbFeatureSelected.getGeometry().getType()
-									.equals(Geometry.Type.POLYLINE)) {
-								Polyline polyline = (Polyline) gdbFeatureSelected
-										.getGeometry();
-								for (int i = 0; i < polyline.getPointCount(); i++) {
-									points.add(polyline.getPoint(i));
-								}
-
-								refresh();
-
-								editingstates.add(new EditingStates(points,
-										midpointselected, vertexselected,
-										insertingindex));
-
-							} else if (gdbFeatureSelected.getGeometry()
-									.getType().equals(Geometry.Type.POLYGON)) {
-								Polygon polygon = (Polygon) gdbFeatureSelected
-										.getGeometry();
-								for (int i = 0; i < polygon.getPointCount(); i++) {
-									points.add(polygon.getPoint(i));
-								}
-
-								refresh();
-								editingstates.add(new EditingStates(points,
-										midpointselected, vertexselected,
-										insertingindex));
-
-							}
-							featureUpdate = true;
-						}
-					} else {
-						if (editingmode == POINT) {
-
-							GeodatabaseFeature g;
-							try {
-								graphicsLayer.removeAll();
-								// this needs to to be created from FeatureLayer
-								// by
-								// passing template
-								g = ((GeodatabaseFeatureTable) ((FeatureLayer) mapView
-										.getLayerByID(getTemplatePicker()
-												.getSelectedLayer().getID()))
-										.getFeatureTable())
-										.createFeatureWithTemplate(
-												getTemplatePicker()
-														.getselectedTemplate(),
-												point);
-								Symbol symbol = ((FeatureLayer) mapView
-										.getLayerByID(getTemplatePicker()
-												.getSelectedLayer().getID()))
-										.getRenderer().getSymbol(g);
-
-								Graphic gr = new Graphic(g.getGeometry(),
-										symbol, g.getAttributes());
-
-								addedGraphicId = graphicsLayer.addGraphic(gr);
-							} catch (TableException e1) {
-								e1.printStackTrace();
-							}
-
-							points.clear();
-						}
-						if (!midpointselected && !vertexselected) {
-							// check if user tries to select an existing point.
-							int idx1 = getSelectedIndex(e.getX(), e.getY(),
-									mpoints, map);
-							if (idx1 != -1) {
-								midpointselected = true;
-								insertingindex = idx1;
-							}
-
-							if (!midpointselected) { // check vertices
-								int idx2 = getSelectedIndex(e.getX(), e.getY(),
-										points, map);
-								if (idx2 != -1) {
-									vertexselected = true;
-									insertingindex = idx2;
-								}
-
-							}
-							if (!midpointselected && !vertexselected) {
-								// no match, add new vertex at the location
-								points.add(point);
-								editingstates.add(new EditingStates(points,
-										midpointselected, vertexselected,
-										insertingindex));
-							}
-
-						} else if (midpointselected || vertexselected) {
-							int idx1 = getSelectedIndex(e.getX(), e.getY(),
-									mpoints, map);
-							int idx2 = getSelectedIndex(e.getX(), e.getY(),
-									points, map);
-							if (idx1 == -1 && idx2 == -1) {
-								movePoint(point);
-								editingstates.add(new EditingStates(points,
-										midpointselected, vertexselected,
-										insertingindex));
-							} else {
-
-								if (idx1 != -1) {
-									insertingindex = idx1;
-								}
-								if (idx2 != -1) {
-									insertingindex = idx2;
-								}
-
-								editingstates.add(new EditingStates(points,
-										midpointselected, vertexselected,
-										insertingindex));
-
-							}
-						} else {
-							// an existing point has been selected previously.
-							movePoint(point);
-						}
-						refresh();
-						redrawCache = true;
-						return true;
-					}
-				}
-			}
-			return true;
 		}
 	}
 
@@ -809,8 +579,244 @@ public class OfflineEditorActivity extends Activity {
 		return mapView;
 	}
 
+    public TemplatePicker getTemplatePicker() {
+        return tp;
+    }
+
+    public void setTemplatePicker(TemplatePicker tp) {
+        this.tp = tp;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mapView.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.unpause();
+
+    }
+
 	/**
-	 * Connect to server to synchronize edits back or download features locally
+     * An instance of this class is created when a new point is to be
+     * added/moved/deleted. Hence we can describe this class as a container of
+     * points selected. Points, vertexes, or mid points.
+     */
+    public class EditingStates {
+        ArrayList<Point> points1 = new ArrayList<Point>();
+
+        boolean midpointselected1 = false;
+
+        boolean vertexselected1 = false;
+
+        int insertingindex1;
+
+        public EditingStates(ArrayList<Point> points, boolean midpointselected,
+                             boolean vertexselected, int insertingindex) {
+            this.points1.addAll(points);
+            this.midpointselected1 = midpointselected;
+            this.vertexselected1 = vertexselected;
+            this.insertingindex1 = insertingindex;
+        }
+    }
+
+    /*
+     * MapView's touch listener
+     */
+    public class MyTouchListener extends MapOnTouchListener {
+        MapView map;
+
+        Context context;
+
+        boolean redrawCache = true;
+
+        public MyTouchListener(Context context, MapView view) {
+            super(context, view);
+            this.context = context;
+            map = view;
+        }
+
+        @Override
+        public boolean onDragPointerMove(MotionEvent from, final MotionEvent to) {
+            if (tp != null && !onlineData) {
+                if (getTemplatePicker().getselectedTemplate() != null) {
+                    setEditingMode();
+                }
+            }
+            return super.onDragPointerMove(from, to);
+        }
+
+        @Override
+        public boolean onDragPointerUp(MotionEvent from, final MotionEvent to) {
+            if (tp != null && !onlineData) {
+                if (getTemplatePicker().getselectedTemplate() != null) {
+                    setEditingMode();
+                }
+            }
+            return super.onDragPointerUp(from, to);
+        }
+
+        /**
+         * In this method we check if the point clicked on the map denotes a new
+         * point or means an existing vertex must be moved.
+         */
+        @Override
+        public boolean onSingleTap(final MotionEvent e) {
+            if (tp != null && !onlineData) {
+
+                Point point = map.toMapPoint(new Point(e.getX(), e.getY()));
+                if (getTemplatePicker().getselectedTemplate() != null) {
+                    setEditingMode();
+
+                }
+                if (getTemplatePicker().getSelectedLayer() != null) {
+                    long[] featureIds = ((FeatureLayer) mapView
+                            .getLayerByID(getTemplatePicker()
+                                    .getSelectedLayer().getID()))
+                            .getFeatureIDs(e.getX(), e.getY(), 25);
+                    if (featureIds.length > 0 && (!featureUpdate)) {
+                        featureUpdateId = featureIds[0];
+                        GeodatabaseFeature gdbFeatureSelected = (GeodatabaseFeature) ((FeatureLayer) mapView
+                                .getLayerByID(getTemplatePicker()
+                                        .getSelectedLayer().getID()))
+                                .getFeature(featureIds[0]);
+                        if (editingmode == POLYLINE || editingmode == POLYGON) {
+                            if (gdbFeatureSelected.getGeometry().getType()
+                                    .equals(Geometry.Type.POLYLINE)) {
+                                Polyline polyline = (Polyline) gdbFeatureSelected
+                                        .getGeometry();
+                                for (int i = 0; i < polyline.getPointCount(); i++) {
+                                    points.add(polyline.getPoint(i));
+                                }
+
+                                refresh();
+
+                                editingstates.add(new EditingStates(points,
+                                        midpointselected, vertexselected,
+                                        insertingindex));
+
+                            } else if (gdbFeatureSelected.getGeometry()
+                                    .getType().equals(Geometry.Type.POLYGON)) {
+                                Polygon polygon = (Polygon) gdbFeatureSelected
+                                        .getGeometry();
+                                for (int i = 0; i < polygon.getPointCount(); i++) {
+                                    points.add(polygon.getPoint(i));
+                                }
+
+                                refresh();
+                                editingstates.add(new EditingStates(points,
+                                        midpointselected, vertexselected,
+                                        insertingindex));
+
+                            }
+                            featureUpdate = true;
+                        }
+                    } else {
+                        if (editingmode == POINT) {
+
+                            GeodatabaseFeature g;
+                            try {
+                                graphicsLayer.removeAll();
+                                // this needs to to be created from FeatureLayer
+                                // by
+                                // passing template
+                                g = ((GeodatabaseFeatureTable) ((FeatureLayer) mapView
+                                        .getLayerByID(getTemplatePicker()
+                                                .getSelectedLayer().getID()))
+                                        .getFeatureTable())
+                                        .createFeatureWithTemplate(
+                                                getTemplatePicker()
+                                                        .getselectedTemplate(),
+                                                point);
+                                Symbol symbol = ((FeatureLayer) mapView
+                                        .getLayerByID(getTemplatePicker()
+                                                .getSelectedLayer().getID()))
+                                        .getRenderer().getSymbol(g);
+
+                                Graphic gr = new Graphic(g.getGeometry(),
+                                        symbol, g.getAttributes());
+
+                                addedGraphicId = graphicsLayer.addGraphic(gr);
+                            } catch (TableException e1) {
+                                e1.printStackTrace();
+                            }
+
+                            points.clear();
+                        }
+                        if (!midpointselected && !vertexselected) {
+                            // check if user tries to select an existing point.
+                            int idx1 = getSelectedIndex(e.getX(), e.getY(),
+                                    mpoints, map);
+                            if (idx1 != -1) {
+                                midpointselected = true;
+                                insertingindex = idx1;
+                            }
+
+                            if (!midpointselected) { // check vertices
+                                int idx2 = getSelectedIndex(e.getX(), e.getY(),
+                                        points, map);
+                                if (idx2 != -1) {
+                                    vertexselected = true;
+                                    insertingindex = idx2;
+                                }
+
+                            }
+                            if (!midpointselected && !vertexselected) {
+                                // no match, add new vertex at the location
+                                points.add(point);
+                                editingstates.add(new EditingStates(points,
+                                        midpointselected, vertexselected,
+                                        insertingindex));
+                            }
+
+                        } else if (midpointselected || vertexselected) {
+                            int idx1 = getSelectedIndex(e.getX(), e.getY(),
+                                    mpoints, map);
+                            int idx2 = getSelectedIndex(e.getX(), e.getY(),
+                                    points, map);
+                            if (idx1 == -1 && idx2 == -1) {
+                                movePoint(point);
+                                editingstates.add(new EditingStates(points,
+                                        midpointselected, vertexselected,
+                                        insertingindex));
+                            } else {
+
+                                if (idx1 != -1) {
+                                    insertingindex = idx1;
+                                }
+                                if (idx2 != -1) {
+                                    insertingindex = idx2;
+                                }
+
+                                editingstates.add(new EditingStates(points,
+                                        midpointselected, vertexselected,
+                                        insertingindex));
+
+                            }
+                        } else {
+                            // an existing point has been selected previously.
+                            movePoint(point);
+                        }
+                        refresh();
+                        redrawCache = true;
+                        return true;
+                    }
+                }
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Connect to server to synchronize edits back or download features locally
 	 */
 	public class ConnectToServer extends AsyncTask<String, Void, Void> {
 
@@ -865,32 +871,6 @@ public class OfflineEditorActivity extends Activity {
 
 			super.onPostExecute(result);
 		}
-
-	}
-
-	public TemplatePicker getTemplatePicker() {
-		return tp;
-	}
-
-	public void setTemplatePicker(TemplatePicker tp) {
-		this.tp = tp;
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mapView.pause();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mapView.unpause();
 
 	}
 }

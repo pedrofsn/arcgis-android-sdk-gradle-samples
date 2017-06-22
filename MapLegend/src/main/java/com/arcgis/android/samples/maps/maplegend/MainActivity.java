@@ -13,7 +13,6 @@
 
 package com.arcgis.android.samples.maps.maplegend;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,7 +23,7 @@ import com.esri.android.map.ags.ArcGISDynamicMapServiceLayer;
 import com.esri.core.geometry.Envelope;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private ArcGISDynamicMapServiceLayer mDynamicServiceLayer;
 

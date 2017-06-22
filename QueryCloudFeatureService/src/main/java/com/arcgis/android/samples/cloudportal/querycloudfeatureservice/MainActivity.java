@@ -13,7 +13,6 @@
 
 package com.arcgis.android.samples.cloudportal.querycloudfeatureservice;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -41,27 +40,24 @@ import com.esri.core.tasks.query.QueryParameters;
 import com.esri.core.tasks.query.QueryTask;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     MapView mMapView;
     ArcGISFeatureLayer mFeatureLayer;
     GraphicsLayer mGraphicsLayer;
-    private Callout mCallout;
-    private Graphic mIdentifiedGraphic;
-
-    private int mCalloutStyle;
-    private ViewGroup mCalloutContent;
     boolean mIsMapLoaded;
     String mFeatureServiceURL;
-
     ProgressDialog progress;
-
     // The query params switching menu items.
     MenuItem mQueryUsMenuItem = null;
     MenuItem mQueryCaMenuItem = null;
     MenuItem mQueryFrMenuItem = null;
     MenuItem mQueryAuMenuItem = null;
     MenuItem mQueryBrMenuItem = null;
+    private Callout mCallout;
+    private Graphic mIdentifiedGraphic;
+    private int mCalloutStyle;
+    private ViewGroup mCalloutContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -234,6 +230,60 @@ public class MainActivity extends Activity {
         calloutView.show();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+
+        // Get the query params menu items.
+        mQueryUsMenuItem = menu.getItem(0);
+        mQueryCaMenuItem = menu.getItem(1);
+        mQueryFrMenuItem = menu.getItem(2);
+        mQueryAuMenuItem = menu.getItem(3);
+        mQueryBrMenuItem = menu.getItem(4);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle menu item selection.
+        switch (item.getItemId()) {
+            case R.id.Query_US:
+                mQueryUsMenuItem.setChecked(true);
+                new QueryFeatureLayer().execute("US");
+                return true;
+            case R.id.Query_CA:
+                mQueryCaMenuItem.setChecked(true);
+                new QueryFeatureLayer().execute("Canada");
+                return true;
+            case R.id.Query_FR:
+                mQueryFrMenuItem.setChecked(true);
+                new QueryFeatureLayer().execute("France");
+                return true;
+            case R.id.Query_AU:
+                mQueryAuMenuItem.setChecked(true);
+                new QueryFeatureLayer().execute("Australia");
+                return true;
+            case R.id.Query_BR:
+                mQueryBrMenuItem.setChecked(true);
+                new QueryFeatureLayer().execute("Brazil");
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    protected void onPause() {
+        super.onPause();
+        mMapView.pause();
+    }
+
+    protected void onResume() {
+        super.onResume();
+        mMapView.unpause();
+    }
+
     /**
      * Run the query task on the feature layer and put the result on the map.
      */
@@ -304,59 +354,5 @@ public class MainActivity extends Activity {
             progress.dismiss();
 
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-
-        // Get the query params menu items.
-        mQueryUsMenuItem = menu.getItem(0);
-        mQueryCaMenuItem = menu.getItem(1);
-        mQueryFrMenuItem = menu.getItem(2);
-        mQueryAuMenuItem = menu.getItem(3);
-        mQueryBrMenuItem = menu.getItem(4);
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle menu item selection.
-        switch (item.getItemId()) {
-            case R.id.Query_US:
-                mQueryUsMenuItem.setChecked(true);
-                new QueryFeatureLayer().execute("US");
-                return true;
-            case R.id.Query_CA:
-                mQueryCaMenuItem.setChecked(true);
-                new QueryFeatureLayer().execute("Canada");
-                return true;
-            case R.id.Query_FR:
-                mQueryFrMenuItem.setChecked(true);
-                new QueryFeatureLayer().execute("France");
-                return true;
-            case R.id.Query_AU:
-                mQueryAuMenuItem.setChecked(true);
-                new QueryFeatureLayer().execute("Australia");
-                return true;
-            case R.id.Query_BR:
-                mQueryBrMenuItem.setChecked(true);
-                new QueryFeatureLayer().execute("Brazil");
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    protected void onPause() {
-        super.onPause();
-        mMapView.pause();
-    }
-
-    protected void onResume() {
-        super.onResume();
-        mMapView.unpause();
     }
 }
