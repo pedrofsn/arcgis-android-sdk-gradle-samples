@@ -74,186 +74,188 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PopupInWebmapForEditing extends AppCompatActivity {
     private MapView map;
-	private PopupContainer popupContainer;
-	private PopupDialog popupDialog;
-	private ProgressDialog progressDialog;
-	private AtomicInteger count;
-	private LinearLayout editorBar;
+    private PopupContainer popupContainer;
+    private PopupDialog popupDialog;
+    private ProgressDialog progressDialog;
+    private AtomicInteger count;
+    private LinearLayout editorBar;
 
-	/** Called when the activity is first created. */
-	@Override
-  public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+    /**
+     * Called when the activity is first created.
+     */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-		// Load a webmap.
-		map = new MapView(
-				this,
-				"http://www.arcgis.com/home/item.html?id=81d2dcf906cf4df4889ec36c8dc0c1f9",
-				"", "");
-		setContentView(map);
+        // Load a webmap.
+        map = new MapView(
+                this,
+                "http://www.arcgis.com/home/item.html?id=81d2dcf906cf4df4889ec36c8dc0c1f9",
+                "", "");
+        setContentView(map);
 
-		// Tap on the map and show popups for selected features.
-		map.setOnSingleTapListener(new OnSingleTapListener() {
-			private static final long serialVersionUID = 1L;
+        // Tap on the map and show popups for selected features.
+        map.setOnSingleTapListener(new OnSingleTapListener() {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-      public void onSingleTap(float x, float y) {
-				if (map.isLoaded()) {
-					// Instantiate a PopupContainer
-					popupContainer = new PopupContainer(map);
-					int id = popupContainer.hashCode();
-					popupDialog = null;
-					// Display spinner.
-					if (progressDialog == null || !progressDialog.isShowing())
-						progressDialog = ProgressDialog.show(map.getContext(),
-								"", "Querying...");
+            @Override
+            public void onSingleTap(float x, float y) {
+                if (map.isLoaded()) {
+                    // Instantiate a PopupContainer
+                    popupContainer = new PopupContainer(map);
+                    int id = popupContainer.hashCode();
+                    popupDialog = null;
+                    // Display spinner.
+                    if (progressDialog == null || !progressDialog.isShowing())
+                        progressDialog = ProgressDialog.show(map.getContext(),
+                                "", "Querying...");
 
-					// Loop through each layer in the webmap
-					int tolerance = 20;
-					Envelope env = new Envelope(map.toMapPoint(x, y), 20 * map
-							.getResolution(), 20 * map.getResolution());
-					Layer[] layers = map.getLayers();
-					count = new AtomicInteger();
-					for (Layer layer : layers) {
-						// If the layer has not been initialized or is
-						// invisible, do nothing.
-						if (!layer.isInitialized() || !layer.isVisible())
-							continue;
+                    // Loop through each layer in the webmap
+                    int tolerance = 20;
+                    Envelope env = new Envelope(map.toMapPoint(x, y), 20 * map
+                            .getResolution(), 20 * map.getResolution());
+                    Layer[] layers = map.getLayers();
+                    count = new AtomicInteger();
+                    for (Layer layer : layers) {
+                        // If the layer has not been initialized or is
+                        // invisible, do nothing.
+                        if (!layer.isInitialized() || !layer.isVisible())
+                            continue;
 
-						if (layer instanceof ArcGISFeatureLayer) {
-							// Query feature layer and display popups
-							ArcGISFeatureLayer featureLayer = (ArcGISFeatureLayer) layer;
-							if (featureLayer.getPopupInfo() != null) {
-								// Query feature layer which is associated with
-								// a popup definition.
-								count.incrementAndGet();
-								new RunQueryFeatureLayerTask(x, y, tolerance,
-										id).execute(featureLayer);
-							}
-						} else if (layer instanceof ArcGISDynamicMapServiceLayer) {
-							// Query dynamic map service layer and display
-							// popups.
-							ArcGISDynamicMapServiceLayer dynamicLayer = (ArcGISDynamicMapServiceLayer) layer;
-							// Retrieve layer info for each sub-layer of the
-							// dynamic map service layer.
-							ArcGISLayerInfo[] layerinfos = dynamicLayer
-									.getAllLayers();
-							if (layerinfos == null)
-								continue;
+                        if (layer instanceof ArcGISFeatureLayer) {
+                            // Query feature layer and display popups
+                            ArcGISFeatureLayer featureLayer = (ArcGISFeatureLayer) layer;
+                            if (featureLayer.getPopupInfo() != null) {
+                                // Query feature layer which is associated with
+                                // a popup definition.
+                                count.incrementAndGet();
+                                new RunQueryFeatureLayerTask(x, y, tolerance,
+                                        id).execute(featureLayer);
+                            }
+                        } else if (layer instanceof ArcGISDynamicMapServiceLayer) {
+                            // Query dynamic map service layer and display
+                            // popups.
+                            ArcGISDynamicMapServiceLayer dynamicLayer = (ArcGISDynamicMapServiceLayer) layer;
+                            // Retrieve layer info for each sub-layer of the
+                            // dynamic map service layer.
+                            ArcGISLayerInfo[] layerinfos = dynamicLayer
+                                    .getAllLayers();
+                            if (layerinfos == null)
+                                continue;
 
-							// Loop through each sub-layer
-							for (ArcGISLayerInfo layerInfo : layerinfos) {
-								// Obtain PopupInfo for sub-layer.
-								PopupInfo popupInfo = dynamicLayer
-										.getPopupInfo(layerInfo.getId());
-								// Skip sub-layer which is without a popup
-								// definition.
-								if (popupInfo == null) {
-									continue;
-								}
-								// Check if a sub-layer is visible.
-								ArcGISLayerInfo info = layerInfo;
-								while (info != null && info.isVisible()) {
-									info = info.getParentLayer();
-								}
-								// Skip invisible sub-layer
-								if (info != null && !info.isVisible()) {
-									continue;
-								}
+                            // Loop through each sub-layer
+                            for (ArcGISLayerInfo layerInfo : layerinfos) {
+                                // Obtain PopupInfo for sub-layer.
+                                PopupInfo popupInfo = dynamicLayer
+                                        .getPopupInfo(layerInfo.getId());
+                                // Skip sub-layer which is without a popup
+                                // definition.
+                                if (popupInfo == null) {
+                                    continue;
+                                }
+                                // Check if a sub-layer is visible.
+                                ArcGISLayerInfo info = layerInfo;
+                                while (info != null && info.isVisible()) {
+                                    info = info.getParentLayer();
+                                }
+                                // Skip invisible sub-layer
+                                if (info != null && !info.isVisible()) {
+                                    continue;
+                                }
 
-								// Check if the sub-layer is within the scale
-								// range
-								double maxScale = (layerInfo.getMaxScale() != 0) ? layerInfo
-										.getMaxScale() : popupInfo
-										.getMaxScale();
-								double minScale = (layerInfo.getMinScale() != 0) ? layerInfo
-										.getMinScale() : popupInfo
-										.getMinScale();
+                                // Check if the sub-layer is within the scale
+                                // range
+                                double maxScale = (layerInfo.getMaxScale() != 0) ? layerInfo
+                                        .getMaxScale() : popupInfo
+                                        .getMaxScale();
+                                double minScale = (layerInfo.getMinScale() != 0) ? layerInfo
+                                        .getMinScale() : popupInfo
+                                        .getMinScale();
 
-								if ((maxScale == 0 || map.getScale() > maxScale)
-										&& (minScale == 0 || map.getScale() < minScale)) {
-									// Query sub-layer which is associated with
-									// a popup definition and is visible and in
-									// scale range.
-									count.incrementAndGet();
-									new RunQueryDynamicLayerTask(env, layer,
-											layerInfo.getId(), dynamicLayer
-													.getSpatialReference(), id)
-											.execute(dynamicLayer.getUrl()
-													+ "/" + layerInfo.getId());
-								}
-							}
-						}
-					}
-				}
-			}
-		});
+                                if ((maxScale == 0 || map.getScale() > maxScale)
+                                        && (minScale == 0 || map.getScale() < minScale)) {
+                                    // Query sub-layer which is associated with
+                                    // a popup definition and is visible and in
+                                    // scale range.
+                                    count.incrementAndGet();
+                                    new RunQueryDynamicLayerTask(env, layer,
+                                            layerInfo.getId(), dynamicLayer
+                                            .getSpatialReference(), id)
+                                            .execute(dynamicLayer.getUrl()
+                                                    + "/" + layerInfo.getId());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
-		map.setOnLongPressListener(new OnLongPressListener() {
-			private static final long serialVersionUID = 1L;
-			private ArcGISFeatureLayer featureLayer = null;
+        map.setOnLongPressListener(new OnLongPressListener() {
+            private static final long serialVersionUID = 1L;
+            private ArcGISFeatureLayer featureLayer = null;
 
-			@Override
-      public boolean onLongPress(float x, float y) {
-				if (map.isLoaded()) {
-					if (progressDialog != null && progressDialog.isShowing()
-							&& count.intValue() == 0)
-						progressDialog.dismiss();
+            @Override
+            public boolean onLongPress(float x, float y) {
+                if (map.isLoaded()) {
+                    if (progressDialog != null && progressDialog.isShowing()
+                            && count.intValue() == 0)
+                        progressDialog.dismiss();
 
-					// Get the point featurelayer
-					Layer[] layers = map.getLayers();
-					for (Layer layer : layers) {
-						if (layer instanceof ArcGISFeatureLayer) {
-							ArcGISFeatureLayer fl = (ArcGISFeatureLayer) layer;
-							if (fl.getGeometryType() == Geometry.Type.POINT) {
-								featureLayer = fl;
-								break;
-							}
-						}
-					}
+                    // Get the point featurelayer
+                    Layer[] layers = map.getLayers();
+                    for (Layer layer : layers) {
+                        if (layer instanceof ArcGISFeatureLayer) {
+                            ArcGISFeatureLayer fl = (ArcGISFeatureLayer) layer;
+                            if (fl.getGeometryType() == Geometry.Type.POINT) {
+                                featureLayer = fl;
+                                break;
+                            }
+                        }
+                    }
 
-					if (featureLayer == null)
-						return false;
-					PopupInfo popupInfo = featureLayer.getPopupInfo();
-					if (popupInfo == null)
-						return false;
+                    if (featureLayer == null)
+                        return false;
+                    PopupInfo popupInfo = featureLayer.getPopupInfo();
+                    if (popupInfo == null)
+                        return false;
 
-					// Create a new feature
-					Point point = map.toMapPoint(x, y);
-					Feature feature;
-					FeatureType[] types = featureLayer.getTypes();
-					if (types == null || types.length < 1) {
-						FeatureTemplate[] templates = featureLayer
-								.getTemplates();
-						if (templates == null || templates.length < 1) {
-							feature = new Graphic(point, null);
-						} else {
-							feature = featureLayer.createFeatureWithTemplate(
-									templates[0], point);
-						}
-					} else {
-						feature = featureLayer.createFeatureWithType(
-								featureLayer.getTypes()[0], point);
-					}
+                    // Create a new feature
+                    Point point = map.toMapPoint(x, y);
+                    Feature feature;
+                    FeatureType[] types = featureLayer.getTypes();
+                    if (types == null || types.length < 1) {
+                        FeatureTemplate[] templates = featureLayer
+                                .getTemplates();
+                        if (templates == null || templates.length < 1) {
+                            feature = new Graphic(point, null);
+                        } else {
+                            feature = featureLayer.createFeatureWithTemplate(
+                                    templates[0], point);
+                        }
+                    } else {
+                        feature = featureLayer.createFeatureWithType(
+                                featureLayer.getTypes()[0], point);
+                    }
 
-					// Instantiate a PopupContainer
-					popupContainer = new PopupContainer(map);
-					// Add Popup
-					Popup popup = featureLayer.createPopup(map, 0, feature);
-					popup.setEditMode(true);
-					popupContainer.addPopup(popup);
-					createEditorBar(featureLayer, false);
+                    // Instantiate a PopupContainer
+                    popupContainer = new PopupContainer(map);
+                    // Add Popup
+                    Popup popup = featureLayer.createPopup(map, 0, feature);
+                    popup.setEditMode(true);
+                    popupContainer.addPopup(popup);
+                    createEditorBar(featureLayer, false);
 
-					// Create a dialog for the popups and display it.
-					popupDialog = new PopupDialog(map.getContext(),
-							popupContainer);
-					popupDialog.show();
-				}
-				return true;
-			}
+                    // Create a dialog for the popups and display it.
+                    popupDialog = new PopupDialog(map.getContext(),
+                            popupContainer);
+                    popupDialog.show();
+                }
+                return true;
+            }
 
-		});
-	}
+        });
+    }
 
     private void createEditorBar(final ArcGISFeatureLayer fl,
                                  final boolean existing) {
@@ -401,338 +403,338 @@ public class PopupInWebmapForEditing extends AppCompatActivity {
         }
     }
 
-	private class EditCallbackListener implements
-			CallbackListener<FeatureEditResult[][]> {
-		private String operation = "Operation ";
-		private ArcGISFeatureLayer featureLayer = null;
-		private boolean existingFeature = true;
+    private class EditCallbackListener implements
+            CallbackListener<FeatureEditResult[][]> {
+        private String operation = "Operation ";
+        private ArcGISFeatureLayer featureLayer = null;
+        private boolean existingFeature = true;
 
-		public EditCallbackListener(String msg,
-				ArcGISFeatureLayer featureLayer, boolean existingFeature) {
-			this.operation = msg;
-			this.featureLayer = featureLayer;
-			this.existingFeature = existingFeature;
-		}
+        public EditCallbackListener(String msg,
+                                    ArcGISFeatureLayer featureLayer, boolean existingFeature) {
+            this.operation = msg;
+            this.featureLayer = featureLayer;
+            this.existingFeature = existingFeature;
+        }
 
-		@Override
-		public void onCallback(FeatureEditResult[][] objs) {
-			if (featureLayer == null || !featureLayer.isInitialized()
-					|| !featureLayer.isEditable())
-				return;
+        @Override
+        public void onCallback(FeatureEditResult[][] objs) {
+            if (featureLayer == null || !featureLayer.isInitialized()
+                    || !featureLayer.isEditable())
+                return;
 
-			runOnUiThread(new Runnable() {
+            runOnUiThread(new Runnable() {
 
-				@Override
-				public void run() {
-					Toast.makeText(PopupInWebmapForEditing.this,
-							operation + " succeeded!", Toast.LENGTH_SHORT)
-							.show();
-				}
-			});
+                @Override
+                public void run() {
+                    Toast.makeText(PopupInWebmapForEditing.this,
+                            operation + " succeeded!", Toast.LENGTH_SHORT)
+                            .show();
+                }
+            });
 
-			if (objs[1] == null || objs[1].length <= 0) {
-				// Save attachments to the server if newly added attachments
-				// exist.
-				// Retrieve object id of the feature
-				long oid;
-				if (existingFeature) {
-					oid = objs[2][0].getObjectId();
-				} else {
-					oid = objs[0][0].getObjectId();
-				}
-				// prepare oid as int for FeatureLayer
-				int objectID = (int) oid;
-				// Get newly added attachments
-				List<File> attachments = popupContainer.getCurrentPopup()
-						.getAddedAttachments();
-				if (attachments != null && attachments.size() > 0) {
-					for (File attachment : attachments) {
-						// Save newly added attachment based on the object id of
-						// the feature.
-						featureLayer.addAttachment(objectID, attachment,
-								new CallbackListener<FeatureEditResult>() {
-									@Override
-                  public void onError(Throwable e) {
-										// Failed to save new attachments.
-										runOnUiThread(new Runnable() {
-											@Override
-                      public void run() {
-												Toast.makeText(
-														PopupInWebmapForEditing.this,
-														"Adding attachment failed!",
-														Toast.LENGTH_SHORT)
-														.show();
-											}
-										});
-									}
+            if (objs[1] == null || objs[1].length <= 0) {
+                // Save attachments to the server if newly added attachments
+                // exist.
+                // Retrieve object id of the feature
+                long oid;
+                if (existingFeature) {
+                    oid = objs[2][0].getObjectId();
+                } else {
+                    oid = objs[0][0].getObjectId();
+                }
+                // prepare oid as int for FeatureLayer
+                int objectID = (int) oid;
+                // Get newly added attachments
+                List<File> attachments = popupContainer.getCurrentPopup()
+                        .getAddedAttachments();
+                if (attachments != null && attachments.size() > 0) {
+                    for (File attachment : attachments) {
+                        // Save newly added attachment based on the object id of
+                        // the feature.
+                        featureLayer.addAttachment(objectID, attachment,
+                                new CallbackListener<FeatureEditResult>() {
+                                    @Override
+                                    public void onError(Throwable e) {
+                                        // Failed to save new attachments.
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(
+                                                        PopupInWebmapForEditing.this,
+                                                        "Adding attachment failed!",
+                                                        Toast.LENGTH_SHORT)
+                                                        .show();
+                                            }
+                                        });
+                                    }
 
-									@Override
-                  public void onCallback(
-											FeatureEditResult arg0) {
-										// New attachments have been saved.
-										runOnUiThread(new Runnable() {
-											@Override
-                      public void run() {
-												Toast.makeText(
-														PopupInWebmapForEditing.this,
-														"Adding attachment succeeded!.",
-														Toast.LENGTH_SHORT)
-														.show();
-											}
-										});
-									}
-								});
-					}
-				}
+                                    @Override
+                                    public void onCallback(
+                                            FeatureEditResult arg0) {
+                                        // New attachments have been saved.
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(
+                                                        PopupInWebmapForEditing.this,
+                                                        "Adding attachment succeeded!.",
+                                                        Toast.LENGTH_SHORT)
+                                                        .show();
+                                            }
+                                        });
+                                    }
+                                });
+                    }
+                }
 
-				// Delete attachments if some attachments have been mark as
-				// delete.
-				// Get ids of attachments which are marked as delete.
-				List<Integer> attachmentIDs = popupContainer.getCurrentPopup()
-						.getDeletedAttachmentIDs();
-				if (attachmentIDs != null && attachmentIDs.size() > 0) {
-					int[] ids = new int[attachmentIDs.size()];
-					for (int i = 0; i < attachmentIDs.size(); i++) {
-						ids[i] = attachmentIDs.get(i);
-					}
-					// Delete attachments
-					featureLayer.deleteAttachments(objectID, ids,
-							new CallbackListener<FeatureEditResult[]>() {
-								@Override
-                public void onError(Throwable e) {
-									// Failed to delete attachments
-									runOnUiThread(new Runnable() {
-										@Override
-                    public void run() {
-											Toast.makeText(
-													PopupInWebmapForEditing.this,
-													"Deleting attachment failed!",
-													Toast.LENGTH_SHORT).show();
-										}
-									});
-								}
+                // Delete attachments if some attachments have been mark as
+                // delete.
+                // Get ids of attachments which are marked as delete.
+                List<Integer> attachmentIDs = popupContainer.getCurrentPopup()
+                        .getDeletedAttachmentIDs();
+                if (attachmentIDs != null && attachmentIDs.size() > 0) {
+                    int[] ids = new int[attachmentIDs.size()];
+                    for (int i = 0; i < attachmentIDs.size(); i++) {
+                        ids[i] = attachmentIDs.get(i);
+                    }
+                    // Delete attachments
+                    featureLayer.deleteAttachments(objectID, ids,
+                            new CallbackListener<FeatureEditResult[]>() {
+                                @Override
+                                public void onError(Throwable e) {
+                                    // Failed to delete attachments
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(
+                                                    PopupInWebmapForEditing.this,
+                                                    "Deleting attachment failed!",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                                }
 
-								@Override
-                public void onCallback(FeatureEditResult[] featureEditResults) {
-									// Attachments have been removed.
-									runOnUiThread(new Runnable() {
-										@Override
-                    public void run() {
-											Toast.makeText(
-													PopupInWebmapForEditing.this,
-													"Deleting attachment succeeded!",
-													Toast.LENGTH_SHORT).show();
-										}
-									});
-								}
-							});
-				}
+                                @Override
+                                public void onCallback(FeatureEditResult[] featureEditResults) {
+                                    // Attachments have been removed.
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(
+                                                    PopupInWebmapForEditing.this,
+                                                    "Deleting attachment succeeded!",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                                }
+                            });
+                }
 
-			}
-		}
+            }
+        }
 
-		@Override
-		public void onError(Throwable e) {
-			runOnUiThread(new Runnable() {
+        @Override
+        public void onError(Throwable e) {
+            runOnUiThread(new Runnable() {
 
-				@Override
-				public void run() {
-					Toast.makeText(PopupInWebmapForEditing.this,
-							operation + " failed!", Toast.LENGTH_SHORT).show();
-				}
-			});
-		}
+                @Override
+                public void run() {
+                    Toast.makeText(PopupInWebmapForEditing.this,
+                            operation + " failed!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
-	}
+    }
 
-	// Query feature layer by hit test
-	private class RunQueryFeatureLayerTask extends
-			AsyncTask<ArcGISFeatureLayer, Void, Feature[]> {
+    // Query feature layer by hit test
+    private class RunQueryFeatureLayerTask extends
+            AsyncTask<ArcGISFeatureLayer, Void, Feature[]> {
 
-		private int tolerance;
-		private float x;
-		private float y;
-		private ArcGISFeatureLayer featureLayer;
-		private int id;
+        private int tolerance;
+        private float x;
+        private float y;
+        private ArcGISFeatureLayer featureLayer;
+        private int id;
 
-		public RunQueryFeatureLayerTask(float x, float y, int tolerance, int id) {
-			super();
-			this.x = x;
-			this.y = y;
-			this.tolerance = tolerance;
-			this.id = id;
-		}
+        public RunQueryFeatureLayerTask(float x, float y, int tolerance, int id) {
+            super();
+            this.x = x;
+            this.y = y;
+            this.tolerance = tolerance;
+            this.id = id;
+        }
 
-		@Override
-		protected Feature[] doInBackground(ArcGISFeatureLayer... params) {
-			for (ArcGISFeatureLayer fLayer : params) {
-				this.featureLayer = fLayer;
-				// Retrieve feature ids near the point.
-				int[] ids = fLayer.getGraphicIDs(x, y, tolerance);
-				if (ids != null && ids.length > 0) {
-					ArrayList<Feature> features = new ArrayList<Feature>();
-					for (int graphicId : ids) {
-						// Obtain feature based on the id.
-						Feature f = fLayer.getGraphic(graphicId);
-						if (f == null)
-							continue;
-						features.add(f);
-					}
-					// Return an array of features near the point.
-					return features.toArray(new Feature[0]);
-				}
-			}
-			return null;
-		}
+        @Override
+        protected Feature[] doInBackground(ArcGISFeatureLayer... params) {
+            for (ArcGISFeatureLayer fLayer : params) {
+                this.featureLayer = fLayer;
+                // Retrieve feature ids near the point.
+                int[] ids = fLayer.getGraphicIDs(x, y, tolerance);
+                if (ids != null && ids.length > 0) {
+                    ArrayList<Feature> features = new ArrayList<Feature>();
+                    for (int graphicId : ids) {
+                        // Obtain feature based on the id.
+                        Feature f = fLayer.getGraphic(graphicId);
+                        if (f == null)
+                            continue;
+                        features.add(f);
+                    }
+                    // Return an array of features near the point.
+                    return features.toArray(new Feature[0]);
+                }
+            }
+            return null;
+        }
 
-		@Override
-		protected void onPostExecute(Feature[] features) {
-			count.decrementAndGet();
-			// Validate parameter.
-			if (features == null || features.length == 0) {
-				// Dismiss spinner
-				if (progressDialog != null && progressDialog.isShowing()
-						&& count.intValue() == 0)
-					progressDialog.dismiss();
+        @Override
+        protected void onPostExecute(Feature[] features) {
+            count.decrementAndGet();
+            // Validate parameter.
+            if (features == null || features.length == 0) {
+                // Dismiss spinner
+                if (progressDialog != null && progressDialog.isShowing()
+                        && count.intValue() == 0)
+                    progressDialog.dismiss();
 
-				return;
-			}
-			// Check if the requested PopupContainer id is the same as the
-			// current PopupContainer.
-			// Otherwise, abandon the obsoleted query result.
-			if (id != popupContainer.hashCode()) {
-				// Dismiss spinner
-				if (progressDialog != null && progressDialog.isShowing()
-						&& count.intValue() == 0)
-					progressDialog.dismiss();
+                return;
+            }
+            // Check if the requested PopupContainer id is the same as the
+            // current PopupContainer.
+            // Otherwise, abandon the obsoleted query result.
+            if (id != popupContainer.hashCode()) {
+                // Dismiss spinner
+                if (progressDialog != null && progressDialog.isShowing()
+                        && count.intValue() == 0)
+                    progressDialog.dismiss();
 
-				return;
-			}
+                return;
+            }
 
-			PopupInfo popupInfo = featureLayer.getPopupInfo();
-			if (popupInfo == null) {
-				// Dismiss spinner
-				if (progressDialog != null && progressDialog.isShowing()
-						&& count.intValue() == 0)
-					progressDialog.dismiss();
+            PopupInfo popupInfo = featureLayer.getPopupInfo();
+            if (popupInfo == null) {
+                // Dismiss spinner
+                if (progressDialog != null && progressDialog.isShowing()
+                        && count.intValue() == 0)
+                    progressDialog.dismiss();
 
-				return;
-			}
+                return;
+            }
 
-			for (Feature fr : features) {
-				Popup popup = featureLayer.createPopup(map, 0, fr);
-				popupContainer.addPopup(popup);
-			}
-			createEditorBar(featureLayer, true);
-			createPopupViews(id);
-		}
+            for (Feature fr : features) {
+                Popup popup = featureLayer.createPopup(map, 0, fr);
+                popupContainer.addPopup(popup);
+            }
+            createEditorBar(featureLayer, true);
+            createPopupViews(id);
+        }
 
-	}
+    }
 
-	// Query dynamic map service layer by QueryTask
-	private class RunQueryDynamicLayerTask extends
-			AsyncTask<String, Void, FeatureSet> {
-		private Envelope env;
-		private SpatialReference sr;
-		private int id;
-		private Layer layer;
-		private int subLayerId;
+    // Query dynamic map service layer by QueryTask
+    private class RunQueryDynamicLayerTask extends
+            AsyncTask<String, Void, FeatureSet> {
+        private Envelope env;
+        private SpatialReference sr;
+        private int id;
+        private Layer layer;
+        private int subLayerId;
 
-		public RunQueryDynamicLayerTask(Envelope env, Layer layer,
-				int subLayerId, SpatialReference sr, int id) {
-			super();
-			this.env = env;
-			this.sr = sr;
-			this.id = id;
-			this.layer = layer;
-			this.subLayerId = subLayerId;
-		}
+        public RunQueryDynamicLayerTask(Envelope env, Layer layer,
+                                        int subLayerId, SpatialReference sr, int id) {
+            super();
+            this.env = env;
+            this.sr = sr;
+            this.id = id;
+            this.layer = layer;
+            this.subLayerId = subLayerId;
+        }
 
-		@Override
-		protected FeatureSet doInBackground(String... urls) {
-			for (String url : urls) {
-				// Retrieve features within the envelope.
-				Query query = new Query();
-				query.setInSpatialReference(sr);
-				query.setOutSpatialReference(sr);
-				query.setGeometry(env);
-				query.setMaxFeatures(10);
-				query.setOutFields(new String[] { "*" });
+        @Override
+        protected FeatureSet doInBackground(String... urls) {
+            for (String url : urls) {
+                // Retrieve features within the envelope.
+                Query query = new Query();
+                query.setInSpatialReference(sr);
+                query.setOutSpatialReference(sr);
+                query.setGeometry(env);
+                query.setMaxFeatures(10);
+                query.setOutFields(new String[]{"*"});
 
-				QueryTask queryTask = new QueryTask(url);
-				try {
-					FeatureSet results = queryTask.execute(query);
-					return results;
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			return null;
-		}
+                QueryTask queryTask = new QueryTask(url);
+                try {
+                    FeatureSet results = queryTask.execute(query);
+                    return results;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
 
-		@Override
-		protected void onPostExecute(final FeatureSet result) {
-			// Validate parameter.
-			count.decrementAndGet();
-			if (result == null) {
-				// Dismiss spinner
-				if (progressDialog != null && progressDialog.isShowing()
-						&& count.intValue() == 0)
-					progressDialog.dismiss();
+        @Override
+        protected void onPostExecute(final FeatureSet result) {
+            // Validate parameter.
+            count.decrementAndGet();
+            if (result == null) {
+                // Dismiss spinner
+                if (progressDialog != null && progressDialog.isShowing()
+                        && count.intValue() == 0)
+                    progressDialog.dismiss();
 
-				return;
-			}
-			Feature[] features = result.getGraphics();
-			if (features == null || features.length == 0) {
-				// Dismiss spinner
-				if (progressDialog != null && progressDialog.isShowing()
-						&& count.intValue() == 0)
-					progressDialog.dismiss();
+                return;
+            }
+            Feature[] features = result.getGraphics();
+            if (features == null || features.length == 0) {
+                // Dismiss spinner
+                if (progressDialog != null && progressDialog.isShowing()
+                        && count.intValue() == 0)
+                    progressDialog.dismiss();
 
-				return;
-			}
-			// Check if the requested PopupContainer id is the same as the
-			// current PopupContainer.
-			// Otherwise, abandon the obsoleted query result.
-			if (id != popupContainer.hashCode()) {
-				// Dismiss spinner
-				if (progressDialog != null && progressDialog.isShowing()
-						&& count.intValue() == 0)
-					progressDialog.dismiss();
+                return;
+            }
+            // Check if the requested PopupContainer id is the same as the
+            // current PopupContainer.
+            // Otherwise, abandon the obsoleted query result.
+            if (id != popupContainer.hashCode()) {
+                // Dismiss spinner
+                if (progressDialog != null && progressDialog.isShowing()
+                        && count.intValue() == 0)
+                    progressDialog.dismiss();
 
-				return;
-			}
+                return;
+            }
 
-			for (Feature fr : features) {
-				Popup popup = layer.createPopup(map, subLayerId, fr);
-				popupContainer.addPopup(popup);
-			}
-			createPopupViews(id);
+            for (Feature fr : features) {
+                Popup popup = layer.createPopup(map, subLayerId, fr);
+                popupContainer.addPopup(popup);
+            }
+            createPopupViews(id);
 
-		}
-	}
+        }
+    }
 
-	// A customize full screen dialog.
-	private class PopupDialog extends Dialog {
-		private PopupContainer pContainer;
+    // A customize full screen dialog.
+    private class PopupDialog extends Dialog {
+        private PopupContainer pContainer;
 
-		public PopupDialog(Context context, PopupContainer popupContainer) {
-			super(context, android.R.style.Theme);
-			this.pContainer = popupContainer;
-		}
+        public PopupDialog(Context context, PopupContainer popupContainer) {
+            super(context, android.R.style.Theme);
+            this.pContainer = popupContainer;
+        }
 
-		@Override
-		protected void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
-			LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT,
-					LayoutParams.WRAP_CONTENT);
-			LinearLayout layout = new LinearLayout(getContext());
-			layout.addView(pContainer.getPopupContainerView(),
-					LayoutParams.MATCH_PARENT,
-					LayoutParams.MATCH_PARENT);
-			setContentView(layout, params);
-		}
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT,
+                    LayoutParams.WRAP_CONTENT);
+            LinearLayout layout = new LinearLayout(getContext());
+            layout.addView(pContainer.getPopupContainerView(),
+                    LayoutParams.MATCH_PARENT,
+                    LayoutParams.MATCH_PARENT);
+            setContentView(layout, params);
+        }
 
-	}
+    }
 
 }
